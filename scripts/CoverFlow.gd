@@ -19,12 +19,19 @@ var current_index: int = 0
 # Шаблон сценки GameCover
 var game_cover_scene: PackedScene
 
+# Флаг для проверки первого обновления
+var first_update: bool = true
+
 func _ready():
 	print("CoverFlow готов к работе")
 	
 	load_games()
 	setup_ui()
+	# Ждем один кадр перед настройкой coverflow
+	await get_tree().process_frame
 	setup_coverflow()
+	# Ждем еще один кадр перед первым обновлением
+	await get_tree().process_frame
 	update_display()
 
 func load_games():
@@ -111,7 +118,7 @@ func update_display():
 			# Центральная (выбранная) коробка
 			pos = Vector3(0, 0, 0)
 			rot = Vector3(0, 0, 0)
-			scl = Vector3(1.2, 1.2, 1.2)  # Немного меньше увеличение
+			scl = Vector3(1.2, 1.2, 1.2)
 			cover.set_selected(true)
 			print("Центральная коробка: ", games[i].title)
 		else:
@@ -121,10 +128,19 @@ func update_display():
 			
 			pos = Vector3(offset * cover_spacing, -0.5 * abs_offset, abs_offset * side_offset)
 			rot = Vector3(0, -side_angle * side_multiplier, 0)
-			scl = Vector3(0.8, 0.8, 0.8)  # Немного больше боковые коробки
+			scl = Vector3(0.8, 0.8, 0.8)
 			cover.set_selected(false)
 		
+		# ВАЖНО: Принудительно устанавливаем позицию при первом обновлении
+		if first_update:
+			cover.position = pos
+			cover.rotation_degrees = rot
+			cover.scale = scl
+		
 		cover.set_target_transform(pos, rot, scl)
+	
+	# Сбрасываем флаг первого обновления
+	first_update = false
 
 func _on_left_pressed():
 	if current_index > 0:
