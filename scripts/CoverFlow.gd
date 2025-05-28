@@ -143,24 +143,34 @@ func update_display():
 	first_update = false
 
 func _on_left_pressed():
-	if current_index > 0:
-		current_index -= 1
-		print("Переход влево, новый индекс: ", current_index)
-		update_display()
+	if games.size() <= 1:
+		return
+	
+	current_index -= 1
+	if current_index < 0:
+		current_index = games.size() - 1
+	
+	print("Переход влево, новый индекс: ", current_index)
+	update_display()
 
 func _on_right_pressed():
-	if current_index < games.size() - 1:
-		current_index += 1
-		print("Переход вправо, новый индекс: ", current_index)
-		update_display()
-
+	if games.size() <= 1:
+		return
+	
+	current_index += 1
+	if current_index >= games.size():
+		current_index = 0
+	
+	print("Переход вправо, новый индекс: ", current_index)
+	update_display()
+	
 func _input(event):
 	# Добавляем управление клавиатурой
-	if event.is_action_pressed("ui_left"):
+	if event.is_action_pressed("ui_left") or event.is_action_pressed("left_pad"):
 		_on_left_pressed()
-	elif event.is_action_pressed("ui_right"):
+	elif event.is_action_pressed("ui_right") or event.is_action_pressed("right_pad"):
 		_on_right_pressed()
-	elif event.is_action_pressed("ui_accept"):
+	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
 		launch_current_game()
 
 func launch_current_game():
