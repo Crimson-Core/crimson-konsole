@@ -3,11 +3,12 @@
 importer="mp3"
 type="AudioStreamMP3"
 uid="uid://bogyjfxem42vi"
-valid=false
+path="res://.godot/imported/key-confirm.mp3-f8fc9fc7c9d04598576d0cde633887c3.mp3str"
 
 [deps]
 
 source_file="res://addons/fancy_editor_sounds/keyboard_sounds/key-confirm.mp3"
+dest_files=["res://.godot/imported/key-confirm.mp3-f8fc9fc7c9d04598576d0cde633887c3.mp3str"]
 
 [params]
 
