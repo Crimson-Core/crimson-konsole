@@ -3,8 +3,10 @@ extends Control
 @onready var viewport_3d = $ViewportContainer/SubViewport
 @onready var camera_3d = $ViewportContainer/SubViewport/Camera3D
 @onready var game_title_label = $GameTitleLabel
-@onready var left_button = $LeftButton
-@onready var right_button = $RightButton
+@onready var keyboard_control = $Keyboard
+@onready var left_button = $Keyboard/LeftButton
+@onready var right_button = $Keyboard/RightButton
+@onready var gamepad_control = $Gamepad
 
 # Массив игр и 3D объектов
 var games: Array[GameLoader.GameData] = []
@@ -22,11 +24,14 @@ var game_cover_scene: PackedScene
 # Флаг для проверки первого обновления
 var first_update: bool = true
 
+var current_input_method = "keyboard" # по дефолту клава
+
 func _ready():
 	print("CoverFlow готов к работе")
 	
 	load_games()
 	setup_ui()
+	setup_keyboard_ui()
 	# Ждем один кадр перед настройкой coverflow
 	await get_tree().process_frame
 	setup_coverflow()
@@ -53,6 +58,14 @@ func setup_ui():
 	if games.size() <= 1:
 		left_button.visible = false
 		right_button.visible = false
+		
+func setup_keyboard_ui():
+	keyboard_control.visible = true
+	gamepad_control.visible = false
+	
+func setup_gamepad_ui():
+	keyboard_control.visible = false
+	gamepad_control.visible = true
 
 func setup_coverflow():
 	print("Настройка coverflow...")
@@ -166,13 +179,23 @@ func _on_right_pressed():
 	update_display()
 	
 func _input(event):
-	# Добавляем управление клавиатурой
+	if event is InputEventKey or event is InputEventMouseButton:
+		if current_input_method != "keyboard":
+			current_input_method = "keyboard"
+			setup_keyboard_ui()
+	elif event is InputEventJoypadButton or event is InputEventJoypadMotion:
+		if current_input_method != "gamepad":
+			current_input_method = "gamepad"
+			setup_gamepad_ui()
+
 	if event.is_action_pressed("ui_left") or event.is_action_pressed("left_pad"):
 		_on_left_pressed()
 	elif event.is_action_pressed("ui_right") or event.is_action_pressed("right_pad"):
 		_on_right_pressed()
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
 		launch_current_game()
+	elif event.is_action_pressed("menu_pad"):
+		add_game()
 
 func launch_current_game():
 	if games.is_empty():
@@ -307,6 +330,9 @@ func show_notification(message: String):
 		if is_instance_valid(notification):
 			notification.queue_free()
 	)
+
+func add_game():
+	get_tree().change_scene_to_file("res://scenes/game_add.tscn")
 
 # Функция для обновления списка игр (вызывается извне)
 func refresh_games():

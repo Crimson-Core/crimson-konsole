@@ -1,10 +1,12 @@
-[gd_scene load_steps=8 format=3 uid="uid://cmugoubnjxiu3"]
+[gd_scene load_steps=10 format=3 uid="uid://cmugoubnjxiu3"]
 
 [ext_resource type="Script" uid="uid://frybfl02g8cs" path="res://scripts/CoverFlow.gd" id="1"]
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_1pbjt"]
 [ext_resource type="Script" uid="uid://cnpic13544agl" path="res://scripts/add_button.gd" id="3_1pbjt"]
 [ext_resource type="Texture2D" uid="uid://gadfduqeq3ed" path="res://assets/icons/plus.svg" id="3_fobrs"]
 [ext_resource type="Texture2D" uid="uid://d03qv365aet3p" path="res://assets/XBOX BUTTONS - Premium Assets/XBOX BUTTONS - Premium Assets/Digital Buttons/ABXY/button_xbox_digital_a_3.png" id="5_fobrs"]
+[ext_resource type="Texture2D" uid="uid://civl27her05dc" path="res://assets/XBOX BUTTONS - Premium Assets/XBOX BUTTONS - Premium Assets/Digital Buttons/System/button_xbox_digital_menu_2.png" id="6_2xvto"]
+[ext_resource type="Texture2D" uid="uid://csbca2btjr4bi" path="res://assets/XBOX BUTTONS - Premium Assets/XBOX BUTTONS - Premium Assets/D-Pad/button_xbox_dpad_light_5.png" id="7_k3nbs"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1pbjt"]
 shader = ExtResource("2_1pbjt")
@@ -111,48 +113,13 @@ text = "Crimson Konsole"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LeftButton" type="Button" parent="."]
-layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_left = 20.0
-offset_top = -25.0
-offset_right = 70.0
-offset_bottom = 25.0
-grow_vertical = 2
-text = "<"
+[node name="Keyboard" type="Control" parent="."]
+visible = false
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
 
-[node name="RightButton" type="Button" parent="."]
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -70.0
-offset_top = -25.0
-offset_right = -20.0
-offset_bottom = 25.0
-grow_horizontal = 0
-grow_vertical = 2
-text = ">"
-
-[node name="InstructionLabel" type="Label" parent="."]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 735.0
-offset_top = -72.0
-offset_right = 1193.0
-offset_bottom = -38.0
-grow_vertical = 0
-theme_override_font_sizes/font_size = 24
-text = "← → для навигации, Enter для запуска"
-horizontal_alignment = 1
-
-[node name="Button" type="Button" parent="."]
+[node name="Button" type="Button" parent="Keyboard"]
 layout_mode = 0
 offset_left = 1772.0
 offset_top = 40.0
@@ -162,27 +129,126 @@ scale = Vector2(2.78479, 2.78479)
 icon = ExtResource("3_fobrs")
 script = ExtResource("3_1pbjt")
 
-[node name="GamepadInstrcut1" type="Label" parent="."]
+[node name="LeftButton" type="Button" parent="Keyboard"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 20.0
+offset_top = 495.0
+offset_right = 70.0
+offset_bottom = 545.0
+grow_vertical = 2
+text = "<"
+
+[node name="RightButton" type="Button" parent="Keyboard"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 1810.0
+offset_top = 495.0
+offset_right = 1860.0
+offset_bottom = 545.0
+grow_horizontal = 0
+grow_vertical = 2
+text = ">"
+
+[node name="InstructionLabel" type="Label" parent="Keyboard"]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 1442.0
-offset_top = -67.0
-offset_right = 1557.0
-offset_bottom = -33.0
+offset_left = 735.0
+offset_top = 968.0
+offset_right = 1193.0
+offset_bottom = 1002.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 24
+text = "← → для навигации, Enter для запуска"
+horizontal_alignment = 1
+
+[node name="Gamepad" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Add" type="Control" parent="Gamepad"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Panel" type="Panel" parent="Gamepad/Add"]
+layout_mode = 0
+offset_left = 1768.0
+offset_top = 36.0
+offset_right = 1866.0
+offset_bottom = 132.0
+
+[node name="Gamepad2" type="TextureRect" parent="Gamepad/Add"]
+layout_mode = 0
+offset_left = 1745.0
+offset_top = 12.0
+offset_right = 2225.0
+offset_bottom = 492.0
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("6_2xvto")
+
+[node name="Zapusk" type="Control" parent="Gamepad"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="GamepadInstrcut1" type="Label" parent="Gamepad/Zapusk"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 1066.0
+offset_top = 968.0
+offset_right = 1181.0
+offset_bottom = 1002.0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 24
 text = "Запуск"
 horizontal_alignment = 1
 
-[node name="TextureRect" type="TextureRect" parent="."]
+[node name="Gamepad1" type="TextureRect" parent="Gamepad/Zapusk"]
 layout_mode = 0
-offset_left = 1384.0
-offset_top = 1002.0
-offset_right = 1864.0
-offset_bottom = 1482.0
-scale = Vector2(0.112054, 0.112054)
+offset_left = 995.0
+offset_top = 988.0
+offset_right = 1475.0
+offset_bottom = 1468.0
+scale = Vector2(0.15, 0.15)
 texture = ExtResource("5_fobrs")
 
-[connection signal="pressed" from="Button" to="Button" method="_on_pressed"]
+[node name="Navigation" type="Control" parent="Gamepad"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="GamepadInstrcut2" type="Label" parent="Gamepad/Navigation"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 844.0
+offset_top = 968.0
+offset_right = 977.0
+offset_bottom = 1002.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 24
+text = "Навигация"
+horizontal_alignment = 1
+
+[node name="Gamepad3" type="TextureRect" parent="Gamepad/Navigation"]
+offset_left = 759.0
+offset_top = 988.0
+offset_right = 1239.0
+offset_bottom = 1468.0
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("7_k3nbs")
+
+[connection signal="pressed" from="Keyboard/Button" to="Keyboard/Button" method="_on_pressed"]

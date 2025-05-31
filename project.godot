@@ -35,13 +35,11 @@ enabled=PackedStringArray("res://addons/fancy_editor_sounds/plugin.cfg")
 left_pad={
 "deadzone": 0.2,
 "events": [Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":-1,"axis":0,"axis_value":-1.0,"script":null)
-, Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"button_index":13,"pressure":0.0,"pressed":false,"script":null)
 ]
 }
 right_pad={
 "deadzone": 0.2,
 "events": [Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":-1,"axis":0,"axis_value":1.0,"script":null)
-, Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"button_index":14,"pressure":0.0,"pressed":false,"script":null)
 ]
 }
 accept_pad={
@@ -72,5 +70,10 @@ up_r_pad={
 down_r_pad={
 "deadzone": 0.2,
 "events": [Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":-1,"axis":3,"axis_value":1.0,"script":null)
+]
+}
+menu_pad={
+"deadzone": 0.2,
+"events": [Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"button_index":6,"pressure":0.0,"pressed":false,"script":null)
 ]
 }
