@@ -5,6 +5,7 @@ extends Control
 @onready var spine = $Panel/Spine
 @onready var executable = $Panel/Executable  # Новая кнопка для выбора файла запуска
 @onready var done_button = $Panel/Done
+@onready var option_button = $Panel/OptionButton
 
 var file_dialog: FileDialog
 var executable_dialog: FileDialog  # Отдельный диалог для исполняемых файлов
@@ -16,7 +17,8 @@ var coverflow_scene: PackedScene
 	"front": "",
 	"back": "",
 	"spine": "",
-	"executable": ""  # Путь к исполняемому файлу
+	"executable": "",  # Путь к исполняемому файлу
+	"box_type": "xbox"
 }
 
 func _ready():
@@ -61,6 +63,10 @@ func _ready():
 	# Загружаем сцену coverflow
 	coverflow_scene = preload("res://scenes/CoverFlow.tscn")
 	
+	option_button.add_item("Xbox 360", 0)
+	option_button.add_item("PC/Steam", 1)
+	option_button.item_selected.connect(_on_option_button_item_selected)
+	
 	# Подключаем кнопки
 #	if done_button:
 #		done_button.pressed.connect(_on_done_pressed)
@@ -97,22 +103,13 @@ func _on_spine_pressed():
 
 func _on_executable_pressed():
 	open_executable_dialog()
-
-func _on_preview_pressed():
-	if game_name.text.strip_edges() == "":
-		show_notification("Сначала введите название игры!")
-		return
-		
-	if coverflow_scene:
-		# Сохраняем временные данные для предварительного просмотра
-		var temp_data = game_data.duplicate()
-		temp_data["title"] = game_name.text.strip_edges()
-		
-		if save_temp_game_data(temp_data):
-			print("Переход к предварительному просмотру")
-			get_tree().change_scene_to_packed(coverflow_scene)
-		else:
-			show_notification("Ошибка создания предварительного просмотра!")
+	
+func _on_option_button_item_selected(index):
+	match index:
+		0:
+			game_data["box_type"] = "xbox"
+		1:
+			game_data["box_type"] = "pc"
 	
 func open_file_dialog():
 	file_dialog.current_file = ""
@@ -143,7 +140,7 @@ func _on_file_selected(path: String):
 			back.text = "Задняя ✓"
 			back.modulate = Color.GREEN
 		"spine":
-			spine.text = "Корешок ✓"
+			spine.text = "Боковая ✓"
 			spine.modulate = Color.GREEN
 	
 	print("Путь сохранен: ", game_data[current_button])
@@ -180,97 +177,6 @@ func is_executable_supported(path: String) -> bool:
 			return extension in ["app", "sh"] or extension == ""
 		_:
 			return true  # Для неизвестных ОС разрешаем все
-
-func launch_game(executable_path: String) -> bool:
-	if executable_path == "" or not FileAccess.file_exists(executable_path):
-		show_notification("Исполняемый файл не найден!")
-		return false
-	
-	var extension = executable_path.get_extension().to_lower()
-	var os_name = OS.get_name()
-	var working_directory = executable_path.get_base_dir()
-	
-	print("Запуск игры: ", executable_path)
-	print("ОС: ", os_name, ", Расширение: ", extension)
-	print("Рабочая директория: ", working_directory)
-	
-	var command: String = ""
-	var arguments: PackedStringArray = []
-	
-	match os_name:
-		"Windows":
-			match extension:
-				"exe":
-					command = executable_path
-				"bat", "cmd":
-					command = "cmd"
-					arguments = ["/c", executable_path]
-				_:
-					show_notification("Неподдерживаемый файл для Windows!")
-					return false
-		
-		"Linux":
-			match extension:
-				"sh":
-					# Делаем файл исполняемым и запускаем
-					OS.execute("chmod", ["+x", executable_path])
-					command = "bash"
-					arguments = [executable_path]
-				"exe":
-					# Запускаем через Wine
-					if is_wine_available():
-						command = "wine"
-						arguments = [executable_path]
-					else:
-						show_notification("Wine не установлен! Невозможно запустить .exe файлы")
-						return false
-				"":
-					# Исполняемый файл без расширения
-					OS.execute("chmod", ["+x", executable_path])
-					command = executable_path
-				_:
-					show_notification("Неподдерживаемый файл для Linux!")
-					return false
-		
-		"macOS":
-			match extension:
-				"app":
-					command = "open"
-					arguments = [executable_path]
-				"sh":
-					OS.execute("chmod", ["+x", executable_path])
-					command = "bash"
-					arguments = [executable_path]
-				"":
-					OS.execute("chmod", ["+x", executable_path])
-					command = executable_path
-				_:
-					show_notification("Неподдерживаемый файл для macOS!")
-					return false
-		
-		_:
-			show_notification("Неподдерживаемая операционная система!")
-			return false
-	
-	# Запускаем процесс
-	print("Команда: ", command)
-	print("Аргументы: ", arguments)
-	
-	var pid = OS.create_process(command, arguments, false)
-	if pid > 0:
-		show_notification("Игра запущена успешно!")
-		print("Игра запущена с PID: ", pid)
-		return true
-	else:
-		show_notification("Ошибка запуска игры!")
-		print("Ошибка запуска процесса")
-		return false
-
-func is_wine_available() -> bool:
-	# Проверяем наличие Wine в системе
-	var output = []
-	var exit_code = OS.execute("which", ["wine"], output)
-	return exit_code == 0 and output.size() > 0
 
 func save_game_data() -> bool:
 	var title = game_data["title"].strip_edges()

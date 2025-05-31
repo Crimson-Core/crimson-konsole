@@ -129,9 +129,9 @@ metadata/_edit_use_anchors_ = true
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0
 offset_left = 626.0
-offset_top = 71.0
+offset_top = 47.0
 offset_right = 1283.0
-offset_bottom = 936.0
+offset_bottom = 1001.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_lcp4n")
 
 [node name="Label" type="Label" parent="Panel"]
@@ -142,6 +142,13 @@ offset_right = 546.0
 offset_bottom = 102.0
 text = "Добавление игры"
 label_settings = SubResource("LabelSettings_312jr")
+
+[node name="OptionButton" type="OptionButton" parent="Panel"]
+layout_mode = 0
+offset_left = 167.0
+offset_top = 715.0
+offset_right = 507.0
+offset_bottom = 780.0
 
 [node name="Name" type="LineEdit" parent="Panel"]
 layout_mode = 0
@@ -193,9 +200,9 @@ text = "Исполняемый
 [node name="Done" type="Button" parent="Panel"]
 layout_mode = 0
 offset_left = 167.0
-offset_top = 743.0
+offset_top = 830.0
 offset_right = 507.0
-offset_bottom = 809.0
+offset_bottom = 896.0
 theme_override_font_sizes/font_size = 32
 text = "Готово"
 

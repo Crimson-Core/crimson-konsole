@@ -8,6 +8,7 @@ class GameData:
 	var back: String = ""
 	var spine: String = ""
 	var executable: String = ""
+	var box_type: String = "xbox"  # По умолчанию Xbox, можно "xbox" или "pc"
 	
 	func _init(data: Dictionary = {}):
 		if data.has("title"):
@@ -20,6 +21,10 @@ class GameData:
 			spine = data["spine"]
 		if data.has("executable"):
 			executable = data["executable"]
+		if data.has("box_type"):
+			box_type = data["box_type"]
+		else:
+			box_type = "xbox"  # Fallback на Xbox если не указано
 
 # Загрузить все игры из директории
 static func load_all_games() -> Array[GameData]:
@@ -44,7 +49,7 @@ static func load_all_games() -> Array[GameData]:
 				var game_data = load_game_data(games_dir + file_name)
 				if game_data:
 					games.append(game_data)
-					print("Игра загружена: ", game_data.title)
+					print("Игра загружена: ", game_data.title, " (тип коробки: ", game_data.box_type, ")")
 			file_name = dir.get_next()
 		
 		dir.list_dir_end()
@@ -87,6 +92,7 @@ static func load_game_data(file_path: String) -> GameData:
 	print("  Передняя: ", game_data.front)
 	print("  Задняя: ", game_data.back)
 	print("  Корешок: ", game_data.spine)
+	print("  Тип коробки: ", game_data.box_type)
 	
 	return game_data
 

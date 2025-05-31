@@ -40,11 +40,7 @@ func load_games():
 	print("Загружено игр: ", games.size())
 	
 	if games.is_empty():
-		print("Игры не найдены, создаем пример")
-		# Добавляем пример игры если нет сохраненных
-		var example_game = GameLoader.GameData.new()
-		example_game.title = "Нет игр"
-		games.append(example_game)
+		print("Игр не найдено, коробки не будут созданы")
 	else:
 		for i in range(games.size()):
 			print("Игра ", i, ": ", games[i].title)
@@ -70,6 +66,10 @@ func setup_coverflow():
 	# Ждем один кадр для очистки
 	await get_tree().process_frame
 	
+	if games.is_empty():
+		print("Игр нет, коробки не создаются")
+		return
+	
 	# Создаем 3D объекты для каждой игры
 	for i in range(games.size()):
 		var cover_instance: GameCover3D
@@ -93,8 +93,9 @@ func setup_coverflow():
 	print("Создано обложек: ", game_covers.size())
 
 func update_display():
-	if games.is_empty() or game_covers.is_empty():
-		print("Нет игр или обложек для отображения")
+	if games.is_empty():
+		print("Игр нет, очищаем отображение")
+		game_title_label.text = "Нет игр"
 		return
 	
 	print("Обновление отображения, текущий индекс: ", current_index)

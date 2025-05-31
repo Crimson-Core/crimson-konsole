@@ -1,8 +1,15 @@
 class_name GameCover3D
 extends Node3D
 
+# Типы коробок, блядь
+enum BoxType {
+	XBOX,
+	PC
+}
+
 var game_data: GameLoader.GameData
 @export var is_selected: bool = false
+@export var box_type: BoxType = BoxType.XBOX  # По умолчанию Xbox, хуле
 var original_scale: Vector3
 var target_position: Vector3
 var target_rotation: Vector3
@@ -33,8 +40,33 @@ func _ready():
 	
 	load_model()
 
+func set_box_type(type: BoxType):
+	"""Устанавливает тип коробки и перезагружает модель"""
+	box_type = type
+	print("Меняем тип коробки на: ", "Xbox" if type == BoxType.XBOX else "PC")
+	
+	# Удаляем старую модель если есть
+	if model_node:
+		model_node.queue_free()
+		model_node = null
+		mesh_instance = null
+	
+	# Загружаем новую модель
+	load_model()
+
 func load_model():
-	var model_scene = load("res://models/game_case.glb")
+	var model_path: String
+	match box_type:
+		BoxType.XBOX:
+			model_path = "res://models/game_case.glb"
+		BoxType.PC:
+			model_path = "res://models/game_case_pc.glb"
+		_:
+			model_path = "res://models/game_case.glb"  # Fallback на Xbox
+	
+	print("Загружаем модель: ", model_path)
+	
+	var model_scene = load(model_path)
 	if model_scene:
 		model_node = model_scene.instantiate()
 		# Увеличиваем базовый размер модели
@@ -50,7 +82,7 @@ func load_model():
 			print("MeshInstance3D не найден, создаем fallback")
 			create_fallback_mesh()
 	else:
-		print("Модель не загружена, создаем fallback")
+		print("Модель не загружена (", model_path, "), создаем fallback")
 		create_fallback_mesh()
 	
 	setup_materials()
@@ -69,8 +101,15 @@ func find_mesh_instance(node: Node) -> MeshInstance3D:
 func create_fallback_mesh():
 	mesh_instance = MeshInstance3D.new()
 	var box_mesh = BoxMesh.new()
-	# Увеличиваем размер fallback коробки
-	box_mesh.size = Vector3(2, 3, 0.3) * model_scale_multiplier
+	
+	# Разные размеры для разных типов коробок
+	match box_type:
+		BoxType.XBOX:
+			box_mesh.size = Vector3(2, 3, 0.3) * model_scale_multiplier
+		BoxType.PC:
+			# PC коробки обычно квадратные или почти квадратные
+			box_mesh.size = Vector3(2.5, 2.5, 0.4) * model_scale_multiplier
+	
 	mesh_instance.mesh = box_mesh
 	add_child(mesh_instance)
 
@@ -101,9 +140,20 @@ func setup_materials():
 
 func set_game_data(data: GameLoader.GameData):
 	game_data = data
-	print("Установлены данные игры: ", game_data.title)
-	print("Пути: front=", game_data.front, ", back=", game_data.back, ", spine=", game_data.spine)
+	print("установлены данные игры: ", game_data.title)
+	print("пути: front=", game_data.front, ", back=", game_data.back, ", spine=", game_data.spine, ", box_type=", game_data.box_type)
 	
+	# синхронизируем тип коробки из game_data
+	match game_data.box_type.to_lower():
+		"xbox":
+			set_box_type(BoxType.XBOX)
+		"pc":
+			set_box_type(BoxType.PC)
+		_:
+			print("неизвестный тип коробки: ", game_data.box_type, ", fallback на Xbox")
+			set_box_type(BoxType.XBOX)
+	
+	# загружаем текстуры после установки модели
 	if mesh_instance:
 		load_textures()
 

@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://cmugoubnjxiu3"]
+[gd_scene load_steps=8 format=3 uid="uid://cmugoubnjxiu3"]
 
 [ext_resource type="Script" uid="uid://frybfl02g8cs" path="res://scripts/CoverFlow.gd" id="1"]
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_1pbjt"]
 [ext_resource type="Script" uid="uid://cnpic13544agl" path="res://scripts/add_button.gd" id="3_1pbjt"]
 [ext_resource type="Texture2D" uid="uid://gadfduqeq3ed" path="res://assets/icons/plus.svg" id="3_fobrs"]
+[ext_resource type="Texture2D" uid="uid://d03qv365aet3p" path="res://assets/XBOX BUTTONS - Premium Assets/XBOX BUTTONS - Premium Assets/Digital Buttons/ABXY/button_xbox_digital_a_3.png" id="5_fobrs"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1pbjt"]
 shader = ExtResource("2_1pbjt")
@@ -160,5 +161,28 @@ offset_bottom = 72.0
 scale = Vector2(2.78479, 2.78479)
 icon = ExtResource("3_fobrs")
 script = ExtResource("3_1pbjt")
+
+[node name="GamepadInstrcut1" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 1442.0
+offset_top = -67.0
+offset_right = 1557.0
+offset_bottom = -33.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 24
+text = "Запуск"
+horizontal_alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 1384.0
+offset_top = 1002.0
+offset_right = 1864.0
+offset_bottom = 1482.0
+scale = Vector2(0.112054, 0.112054)
+texture = ExtResource("5_fobrs")
 
 [connection signal="pressed" from="Button" to="Button" method="_on_pressed"]
