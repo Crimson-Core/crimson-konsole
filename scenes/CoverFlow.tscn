@@ -244,6 +244,7 @@ text = "Навигация"
 horizontal_alignment = 1
 
 [node name="Gamepad3" type="TextureRect" parent="Gamepad/Navigation"]
+layout_mode = 0
 offset_left = 759.0
 offset_top = 988.0
 offset_right = 1239.0
