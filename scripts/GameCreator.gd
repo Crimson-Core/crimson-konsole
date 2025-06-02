@@ -3,12 +3,13 @@ extends Control
 @onready var front = $Panel/Front
 @onready var back = $Panel/Back
 @onready var spine = $Panel/Spine
-@onready var executable = $Panel/Executable  # Новая кнопка для выбора файла запуска
+@onready var executable = $Panel/Executable
 @onready var done_button = $Panel/Done
 @onready var option_button = $Panel/OptionButton
+@onready var download_button = $Panel/DownloadCovers  # Кнопка для скачивания
 
 var file_dialog: FileDialog
-var executable_dialog: FileDialog  # Отдельный диалог для исполняемых файлов
+var executable_dialog: FileDialog
 var current_button: String = ""
 var coverflow_scene: PackedScene
 
@@ -17,12 +18,12 @@ var coverflow_scene: PackedScene
 	"front": "",
 	"back": "",
 	"spine": "",
-	"executable": "",  # Путь к исполняемому файлу
+	"executable": "",
 	"box_type": "xbox"
 }
 
 func _ready():
-	print("GameCreator готов")
+	print("GameCreator готов, блядь")
 	
 	# Создаем файловый диалог для изображений
 	file_dialog = FileDialog.new()
@@ -60,19 +61,263 @@ func _ready():
 	executable_dialog.file_selected.connect(_on_executable_selected)
 	add_child(executable_dialog)
 	
+	# Создаем папку covers если её нет
+	ensure_covers_directory()
+	
 	# Загружаем сцену coverflow
 	coverflow_scene = preload("res://scenes/CoverFlow.tscn")
 	
 	option_button.add_item("Xbox 360", 0)
 	option_button.add_item("PC/Steam", 1)
 	option_button.item_selected.connect(_on_option_button_item_selected)
+
+func ensure_covers_directory():
+	"""Создает папку covers если её нет"""
+	var covers_path = get_covers_directory()
+	if not DirAccess.dir_exists_absolute(covers_path):
+		var result = DirAccess.open("user://").make_dir_recursive(covers_path.get_file())
+		if result == OK:
+			print("Папка covers создана: ", covers_path)
+		else:
+			print("Ошибка создания папки covers: ", result)
+
+func get_covers_directory() -> String:
+	"""Возвращает путь к папке covers"""
+	return "user://covers/"
+
+func get_steamboxcover_path() -> String:
+	"""Возвращает путь к программе steamboxcover с улучшенной отладкой"""
+	var exe_path = OS.get_executable_path()
+	var exe_dir = exe_path.get_base_dir()
 	
-	# Подключаем кнопки
-#	if done_button:
-#		done_button.pressed.connect(_on_done_pressed)
-#	if executable:
-#		executable.pressed.connect(_on_executable_pressed)
+	print("Исполняемый файл Godot: ", exe_path)
+	print("Директория исполняемого файла: ", exe_dir)
 	
+	var steamboxcover_path: String
+	if OS.get_name() == "Windows":
+		steamboxcover_path = exe_dir + "/steamboxcover.exe"
+	else:
+		steamboxcover_path = exe_dir + "/steamboxcover"
+	
+	# Проверяем также в текущей рабочей директории
+	var current_dir = OS.get_environment("PWD")
+	if current_dir == "":
+		current_dir = exe_dir
+	
+	var alt_path: String
+	if OS.get_name() == "Windows":
+		alt_path = current_dir + "/steamboxcover.exe"
+	else:
+		alt_path = current_dir + "/steamboxcover"
+	
+	print("Основной путь: ", steamboxcover_path)
+	print("Альтернативный путь: ", alt_path)
+	
+	# Если основной путь не существует, пробуем альтернативный
+	if not FileAccess.file_exists(steamboxcover_path) and FileAccess.file_exists(alt_path):
+		print("Используем альтернативный путь")
+		return alt_path
+	
+	return steamboxcover_path
+
+func get_spine_template_path() -> String:
+	"""Возвращает путь к шаблону spine"""
+	var exe_path = OS.get_executable_path()
+	var exe_dir = exe_path.get_base_dir()
+	return exe_dir + "/steam_spine.png"
+
+func _on_download_covers_pressed():
+	"""Запускает загрузку обложек через steamboxcover"""
+	var title = game_name.text.strip_edges()
+	if title == "":
+		show_notification("Введите название игры!")
+		return
+	
+	var steamboxcover_path = get_steamboxcover_path()
+	var spine_template_path = get_spine_template_path()
+	var covers_dir = get_covers_directory()
+	
+	# Логируем все пути для отладки
+	print("=== ОТЛАДКА ЗАПУСКА STEAMBOXCOVER ===")
+	print("Путь к steamboxcover: ", steamboxcover_path)
+	print("Существует ли файл: ", FileAccess.file_exists(steamboxcover_path))
+	print("Путь к spine template: ", spine_template_path)
+	print("Папка covers: ", covers_dir)
+	print("Глобальный путь covers: ", ProjectSettings.globalize_path(covers_dir))
+	
+	# Проверяем существование программы
+	if not FileAccess.file_exists(steamboxcover_path):
+		show_notification("Программа steamboxcover не найдена!")
+		print("ОШИБКА: Ожидался путь: ", steamboxcover_path)
+		return
+	
+	# Проверяем права на выполнение (для Linux/Mac)
+	if OS.get_name() != "Windows":
+		var test_output = []
+		var test_result = OS.execute("ls", ["-la", steamboxcover_path], test_output, true)
+		print("Права доступа к файлу: ", test_output)
+	
+	# Проверяем шаблон spine (не критично если нет)
+	if not FileAccess.file_exists(spine_template_path):
+		print("ВНИМАНИЕ: Шаблон spine не найден: ", spine_template_path)
+		spine_template_path = ""
+	
+	# Формируем команду
+	var args = []
+	args.append("--game")
+	args.append(title)
+	args.append("--output_dir")
+	args.append(ProjectSettings.globalize_path(covers_dir))
+	
+	if spine_template_path != "":
+		args.append("--spine_template")
+		args.append(ProjectSettings.globalize_path(spine_template_path))
+	
+	print("Полная команда: ", steamboxcover_path, " ", args)
+	
+	# Временно блокируем кнопку
+	download_button.text = "Загрузка..."
+	download_button.disabled = true
+	
+	# Синхронный запуск - работает отлично!
+	var output = []
+	print("Запуск синхронного процесса...")
+	var result = OS.execute(steamboxcover_path, args, output, true, false)
+	
+	print("Код результата: ", result)
+	print("Вывод программы: ", output)
+	
+	# Восстанавливаем кнопку
+	download_button.text = "Скачать обложки"
+	download_button.disabled = false
+	
+	if result != OK:
+		print("ОШИБКА: Синхронный запуск провалился с кодом: ", result)
+		
+		# Пробуем запуск через командную строку системы
+		print("Пробуем альтернативный способ запуска...")
+		var alt_result = try_alternative_execution(steamboxcover_path, args)
+		if not alt_result:
+			show_notification("Все способы запуска провалились!")
+			return
+	
+	# Если всё прошло успешно
+	if result == OK:
+		show_notification("Обложки загружены успешно!")
+		
+		# Ищем и применяем созданные обложки
+		var found_covers = find_covers_for_game(title)
+		if found_covers.size() > 0:
+			print("Найдены и применяются обложки: ", found_covers)
+			apply_found_covers(found_covers)
+		else:
+			print("Хм, обложки не найдены, хотя программа отработала...")
+			# Попробуем найти по безопасному имени
+			found_covers = find_covers_for_game(make_safe_filename(title))
+			if found_covers.size() > 0:
+				print("Найдены обложки по безопасному имени: ", found_covers)
+				apply_found_covers(found_covers)
+	else:
+		show_notification("Ошибка запуска загрузки обложек!")
+		print("ОШИБКА: Синхронный запуск провалился с кодом: ", result)
+
+func try_alternative_execution(program_path: String, arguments: Array) -> bool:
+	"""Пробует альтернативные способы запуска программы"""
+	var os_name = OS.get_name()
+	
+	match os_name:
+		"Windows":
+			# Пробуем через cmd
+			var cmd_args = ["/c", program_path]
+			cmd_args.append_array(arguments)
+			var output = []
+			var result = OS.execute("cmd", cmd_args, output, true, false)
+			print("CMD запуск результат: ", result)
+			print("CMD вывод: ", output)
+			return result == OK
+			
+		"Linux", "macOS":
+			# Пробуем через bash
+			var bash_command = program_path + " " + " ".join(arguments)
+			var output = []
+			var result = OS.execute("bash", ["-c", bash_command], output, true, false)
+			print("Bash запуск результат: ", result)
+			print("Bash вывод: ", output)
+			return result == OK
+	
+	return false
+
+func find_covers_for_game(game_title: String) -> Dictionary:
+	"""Ищет обложки для указанной игры в папке covers"""
+	var covers_dir = get_covers_directory()
+	var found = {}
+	
+	var dir = DirAccess.open(covers_dir)
+	if not dir:
+		print("Не удалось открыть папку covers: ", covers_dir)
+		return found
+	
+	print("Ищем обложки для игры: ", game_title, " в папке: ", covers_dir)
+	
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	
+	while file_name != "":
+		print("Проверяем файл: ", file_name)
+		
+		# Проверяем точное совпадение с названием игры
+		if file_name.begins_with(game_title):
+			var full_path = covers_dir + file_name
+			var lower_filename = file_name.to_lower()
+			
+			print("Найден подходящий файл: ", file_name)
+			
+			# Определяем тип обложки по окончанию имени файла
+			if lower_filename.ends_with("_back.png") or lower_filename.ends_with("_back.jpg"):
+				found["back"] = full_path
+				print("Найдена задняя обложка: ", full_path)
+			elif lower_filename.ends_with("_spine.png") or lower_filename.ends_with("_spine.jpg"):
+				found["spine"] = full_path  
+				print("Найдена боковая обложка: ", full_path)
+			elif (lower_filename.ends_with(".png") or lower_filename.ends_with(".jpg")) and not lower_filename.contains("_"):
+				# Это передняя обложка (без суффикса)
+				found["front"] = full_path
+				print("Найдена передняя обложка: ", full_path)
+		
+		file_name = dir.get_next()
+	
+	dir.list_dir_end()
+	print("Итого найдено обложек: ", found.size())
+	return found
+
+func make_safe_filename(text: String) -> String:
+	"""Создает безопасное имя файла из текста"""
+	var safe = text.replace(" ", "_").replace("/", "_").replace("\\", "_")
+	var invalid_chars = ["<", ">", ":", "\"", "|", "?", "*"]
+	for char in invalid_chars:
+		safe = safe.replace(char, "_")
+	return safe
+
+func apply_found_covers(covers: Dictionary):
+	"""Применяет найденные обложки к game_data"""
+	for cover_type in covers:
+		var path = covers[cover_type]
+		game_data[cover_type] = path
+		
+		# Обновляем UI кнопок
+		match cover_type:
+			"front":
+				front.text = "Передняя ✓"
+				front.modulate = Color.GREEN
+			"back":
+				back.text = "Задняя ✓" 
+				back.modulate = Color.GREEN
+			"spine":
+				spine.text = "Боковая ✓"
+				spine.modulate = Color.GREEN
+		
+		print("Обложка применена: ", cover_type, " -> ", path)
+
 func _on_done_pressed():
 	if game_name.text.strip_edges() == "":
 		show_notification("Введите название игры!")
@@ -172,11 +417,11 @@ func is_executable_supported(path: String) -> bool:
 		"Windows":
 			return extension in ["exe", "bat", "cmd"]
 		"Linux":
-			return extension in ["sh", "exe"] or extension == ""  # Пустое расширение для исполняемых файлов
+			return extension in ["sh", "exe"] or extension == ""
 		"macOS":
 			return extension in ["app", "sh"] or extension == ""
 		_:
-			return true  # Для неизвестных ОС разрешаем все
+			return true
 
 func save_game_data() -> bool:
 	var title = game_data["title"].strip_edges()

@@ -129,9 +129,9 @@ metadata/_edit_use_anchors_ = true
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0
 offset_left = 626.0
-offset_top = 47.0
+offset_top = 30.0
 offset_right = 1283.0
-offset_bottom = 1001.0
+offset_bottom = 1028.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_lcp4n")
 
 [node name="Label" type="Label" parent="Panel"]
@@ -146,9 +146,9 @@ label_settings = SubResource("LabelSettings_312jr")
 [node name="OptionButton" type="OptionButton" parent="Panel"]
 layout_mode = 0
 offset_left = 167.0
-offset_top = 715.0
+offset_top = 699.0
 offset_right = 507.0
-offset_bottom = 780.0
+offset_bottom = 764.0
 
 [node name="Name" type="LineEdit" parent="Panel"]
 layout_mode = 0
@@ -190,19 +190,27 @@ text = "Боковая"
 [node name="Executable" type="Button" parent="Panel"]
 layout_mode = 0
 offset_left = 167.0
-offset_top = 577.0
+offset_top = 561.0
 offset_right = 507.0
-offset_bottom = 675.0
+offset_bottom = 659.0
 theme_override_font_sizes/font_size = 32
 text = "Исполняемый
 Файл"
 
+[node name="DownloadCovers" type="Button" parent="Panel"]
+offset_left = 167.0
+offset_top = 800.0
+offset_right = 507.0
+offset_bottom = 866.0
+theme_override_font_sizes/font_size = 32
+text = "Скачать обложки"
+
 [node name="Done" type="Button" parent="Panel"]
 layout_mode = 0
 offset_left = 167.0
-offset_top = 830.0
+offset_top = 896.0
 offset_right = 507.0
-offset_bottom = 896.0
+offset_bottom = 962.0
 theme_override_font_sizes/font_size = 32
 text = "Готово"
 
@@ -224,4 +232,5 @@ horizontal_alignment = 1
 [connection signal="pressed" from="Panel/Back" to="." method="_on_back_pressed"]
 [connection signal="pressed" from="Panel/Spine" to="." method="_on_spine_pressed"]
 [connection signal="pressed" from="Panel/Executable" to="." method="_on_executable_pressed"]
+[connection signal="pressed" from="Panel/DownloadCovers" to="." method="_on_download_covers_pressed"]
 [connection signal="pressed" from="Panel/Done" to="." method="_on_done_pressed"]
