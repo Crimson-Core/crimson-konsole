@@ -56,11 +56,51 @@ func load_games():
 	games = GameLoader.load_all_games()
 	print("Загружено игр: ", games.size())
 	
+	cleanup_unused_covers()
+	
 	if games.is_empty():
 		print("Игр не найдено, коробки не будут созданы")
 	else:
 		for i in range(games.size()):
 			print("Игра ", i, ": ", games[i].title)
+
+func cleanup_unused_covers():
+	"""Удаляет неиспользуемые обложки из папки covers"""
+	var covers_dir = "user://covers/"
+	
+	if not DirAccess.dir_exists_absolute(covers_dir):
+		return
+	
+	# Собираем все используемые пути к обложкам
+	var used_covers = {}
+	for game in games:
+		if game.get("front") != "":
+			used_covers[game.front] = true
+		if game.get("back") != "":
+			used_covers[game.back] = true
+		if game.get("spine") != "":
+			used_covers[game.spine] = true
+	
+	# Сканируем папку covers и удаляем неиспользуемые файлы
+	var dir = DirAccess.open(covers_dir)
+	if not dir:
+		return
+	
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	
+	while file_name != "":
+		if not file_name.begins_with("."):  # Пропускаем скрытые файлы
+			var full_path = covers_dir + file_name
+			
+			# Если файл не используется ни одной игрой - удаляем
+			if not used_covers.has(full_path):
+				print("Удаляем неиспользуемую обложку: ", full_path)
+				dir.remove(file_name)
+		
+		file_name = dir.get_next()
+	
+	dir.list_dir_end()
 
 func setup_ui():
 	left_button.pressed.connect(_on_left_pressed)
