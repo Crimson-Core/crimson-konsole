@@ -263,7 +263,7 @@ func launch_game_executable(executable_path: String) -> bool:
 				"exe":
 					if is_wine_available():
 						command = "sh"
-						arguments = ["-c", "cd \"" + working_directory + "\" && wine \"" + executable_path + "\""]
+						arguments = ["-c", "cd \"" + working_directory + "\" && umu-run \"" + executable_path + "\""]
 					else:
 						show_notification("Wine не установлен! Невозможно запустить .exe файлы")
 						return false
@@ -314,7 +314,7 @@ func launch_game_executable(executable_path: String) -> bool:
 func is_wine_available() -> bool:
 	# Проверяем наличие Wine в системе
 	var output = []
-	var exit_code = OS.execute("which", ["wine"], output)
+	var exit_code = OS.execute("which", ["umu-run"], output)
 	return exit_code == 0 and output.size() > 0
 
 func show_notification(message: String):
