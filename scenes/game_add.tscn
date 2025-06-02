@@ -198,6 +198,7 @@ text = "Исполняемый
 Файл"
 
 [node name="DownloadCovers" type="Button" parent="Panel"]
+layout_mode = 0
 offset_left = 167.0
 offset_top = 800.0
 offset_right = 507.0
