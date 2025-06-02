@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cwvmla1i51fpv"]
 
-[ext_resource type="Script" uid="uid://dnbu0ykqctd72" path="res://scripts/gamepad_test.gd" id="1_errlg"]
+[ext_resource type="Script" uid="uid://dnbu0ykqctd72" path="res://scripts/test/gamepad_test.gd" id="1_errlg"]
 
 [node name="test" type="Control"]
 layout_mode = 3

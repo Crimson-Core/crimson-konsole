@@ -7,6 +7,11 @@ extends Control
 @onready var left_button = $Keyboard/LeftButton
 @onready var right_button = $Keyboard/RightButton
 @onready var gamepad_control = $Gamepad
+# Иконки для геймпадов
+@onready var a_button = $Gamepad/Instruction/Zapusk/Play
+@onready var dpad_button = $Gamepad/Instruction/Navigation/Navigation
+@onready var start_button = $Gamepad/Add/Start
+@onready var controller_icon = $Gamepad/Controller/Icon
 
 # Массив игр и 3D объектов
 var games: Array[GameLoader.GameData] = []
@@ -17,6 +22,9 @@ var current_index: int = 0
 @export var cover_spacing: float = 8.0
 @export var side_angle: float = 60.0
 @export var side_offset: float = 3.0
+
+const GamepadType = preload("res://scripts/GamepadType.gd")
+var gamepadtype = GamepadType.new()
 
 # Шаблон сценки GameCover
 var game_cover_scene: PackedScene
@@ -32,6 +40,10 @@ func _ready():
 	load_games()
 	setup_ui()
 	setup_keyboard_ui()
+	
+	for device_id in Input.get_connected_joypads():
+		update_controller_icon(device_id)
+		
 	# Ждем один кадр перед настройкой coverflow
 	await get_tree().process_frame
 	setup_coverflow()
@@ -66,6 +78,27 @@ func setup_keyboard_ui():
 func setup_gamepad_ui():
 	keyboard_control.visible = false
 	gamepad_control.visible = true
+
+func update_controller_icon(device_id: int):
+	var joy_name = Input.get_joy_name(device_id).to_lower()
+	var controller_type = gamepadtype.detect_controller_type(joy_name)
+	
+	match controller_type:
+		gamepadtype.ControllerType.XBOX:
+			controller_icon.texture = load(gamepadtype.ICON_XBOX_CONTROLLER)
+			a_button.texture = load(gamepadtype.ICON_XBOX_A)
+			dpad_button.texture = load(gamepadtype.ICON_XBOX_DPAD)
+			start_button.texture = load(gamepadtype.ICON_XBOX_START)
+		gamepadtype.ControllerType.PLAYSTATION:
+			controller_icon.texture = load(gamepadtype.ICON_PS_CONTROLLER)
+			a_button.texture = load(gamepadtype.ICON_PS_A)
+			dpad_button.texture = load(gamepadtype.ICON_PS_DPAD)
+			start_button.texture = load(gamepadtype.ICON_PS_START)
+		_:
+			controller_icon.texture = load(gamepadtype.ICON_GENERIC_CONTROLLER)
+			a_button.texture = load(gamepadtype.ICON_GENERIC_A)
+			dpad_button.texture = load(gamepadtype.ICON_GENERIC_DPAD)
+			start_button.texture = load(gamepadtype.ICON_GENERIC_START)
 
 func setup_coverflow():
 	print("Настройка coverflow...")
@@ -187,6 +220,8 @@ func _input(event):
 		if current_input_method != "gamepad":
 			current_input_method = "gamepad"
 			setup_gamepad_ui()
+		var device_id = event.device
+		update_controller_icon(device_id)
 
 	if event.is_action_pressed("ui_left") or event.is_action_pressed("left_pad"):
 		_on_left_pressed()
