@@ -271,6 +271,10 @@ func launch_game_executable(executable_path: String) -> bool:
 					OS.execute("chmod", ["+x", executable_path])
 					command = "sh"
 					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
+				"x86_64":
+					OS.execute("chmod", ["+x", executable_path])
+					command = "sh"
+					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
 				_:
 					show_notification("Неподдерживаемый файл для Linux!")
 					return false
