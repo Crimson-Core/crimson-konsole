@@ -245,10 +245,11 @@ func launch_game_executable(executable_path: String) -> bool:
 		"Windows":
 			match extension:
 				"exe":
-					command = executable_path
+					command = "cmd"
+					arguments = ["/c", "cd /d \"" + working_directory + "\" && \"" + executable_path + "\""]
 				"bat", "cmd":
 					command = "cmd"
-					arguments = ["/c", executable_path]
+					arguments = ["/c", "cd /d \"" + working_directory + "\" && " + executable_path]
 				_:
 					show_notification("Неподдерживаемый файл для Windows!")
 					return false
@@ -256,22 +257,20 @@ func launch_game_executable(executable_path: String) -> bool:
 		"Linux":
 			match extension:
 				"sh":
-					# Делаем файл исполняемым и запускаем
 					OS.execute("chmod", ["+x", executable_path])
-					command = "bash"
-					arguments = [executable_path]
+					command = "sh"
+					arguments = ["-c", "cd \"" + working_directory + "\" && bash \"" + executable_path + "\""]
 				"exe":
-					# Запускаем через Wine
 					if is_wine_available():
-						command = "wine"
-						arguments = [executable_path]
+						command = "sh"
+						arguments = ["-c", "cd \"" + working_directory + "\" && wine \"" + executable_path + "\""]
 					else:
 						show_notification("Wine не установлен! Невозможно запустить .exe файлы")
 						return false
 				"":
-					# Исполняемый файл без расширения
 					OS.execute("chmod", ["+x", executable_path])
-					command = executable_path
+					command = "sh"
+					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
 				_:
 					show_notification("Неподдерживаемый файл для Linux!")
 					return false
@@ -283,11 +282,12 @@ func launch_game_executable(executable_path: String) -> bool:
 					arguments = [executable_path]
 				"sh":
 					OS.execute("chmod", ["+x", executable_path])
-					command = "bash"
-					arguments = [executable_path]
+					command = "sh"
+					arguments = ["-c", "cd \"" + working_directory + "\" && bash \"" + executable_path + "\""]
 				"":
 					OS.execute("chmod", ["+x", executable_path])
-					command = executable_path
+					command = "sh"
+					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
 				_:
 					show_notification("Неподдерживаемый файл для macOS!")
 					return false
@@ -296,7 +296,6 @@ func launch_game_executable(executable_path: String) -> bool:
 			show_notification("Неподдерживаемая операционная система!")
 			return false
 	
-	# Запускаем процесс
 	print("Команда: ", command)
 	print("Аргументы: ", arguments)
 	
