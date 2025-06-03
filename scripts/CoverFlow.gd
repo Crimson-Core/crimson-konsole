@@ -1,11 +1,10 @@
 extends Control
 
+@onready var viewport_container = $ViewportContainer
 @onready var viewport_3d = $ViewportContainer/SubViewport
 @onready var camera_3d = $ViewportContainer/SubViewport/Camera3D
 @onready var game_title_label = $GameTitleLabel
 @onready var keyboard_control = $Keyboard
-@onready var left_button = $Keyboard/LeftButton
-@onready var right_button = $Keyboard/RightButton
 @onready var gamepad_control = $Gamepad
 @onready var a_button = $Gamepad/Instruction/Zapusk/Play
 @onready var dpad_button = $Gamepad/Instruction/Navigation/Navigation
@@ -16,9 +15,10 @@ var games: Array[GameLoader.GameData] = []
 var game_covers: Array[GameCover3D] = []
 var current_index: int = 0
 
-@export var cover_spacing: float = 8.0
-@export var side_angle: float = 60.0
-@export var side_offset: float = 3.0
+@export var cover_spacing: float = 6.0  # Уменьшено для вертикального расположения
+@export var side_angle_y: float = 35.0  # Поворот по Y для показа боковой обложки
+@export var side_angle_x: float = 0.0   # Небольшой наклон по X
+@export var side_offset: float = 2.0
 
 const GamepadTypeClass = preload("res://scripts/GamepadType.gd")
 var gamepadtype = GamepadTypeClass.new()
@@ -28,7 +28,6 @@ var current_input_method = "keyboard"
 
 func _ready():
 	load_games()
-	setup_ui()
 	setup_keyboard_ui()
 	
 	for device_id in Input.get_connected_joypads():
@@ -75,14 +74,6 @@ func cleanup_unused_covers():
 		file_name = dir.get_next()
 	
 	dir.list_dir_end()
-
-func setup_ui():
-	left_button.pressed.connect(_on_left_pressed)
-	right_button.pressed.connect(_on_right_pressed)
-	
-	if games.size() <= 1:
-		left_button.visible = false
-		right_button.visible = false
 		
 func setup_keyboard_ui():
 	keyboard_control.visible = true
@@ -138,7 +129,7 @@ func setup_coverflow():
 		viewport_3d.add_child(cover_instance)
 		game_covers.append(cover_instance)
 
-# Обновляет позиции и анимации всех обложек
+# Обновляет позиции и анимации всех обложек для вертикального coverflow
 func update_display():
 	if games.is_empty():
 		game_title_label.text = "Нет игр"
@@ -157,45 +148,50 @@ func update_display():
 		var scl = Vector3.ONE
 		
 		if offset == 0:
+			# Центральная обложка - слегка повернута для показа боковой стороны
 			pos = Vector3(0, 0, 0)
-			rot = Vector3(0, 0, 0)
+			rot = Vector3(-side_angle_x, side_angle_y, 0)
 			scl = Vector3(1.2, 1.2, 1.2)
 			cover.set_selected(true)
 		else:
-			var side_multiplier = 1 if offset > 0 else -1
+			# Боковые обложки расположены вертикально
 			var abs_offset = abs(offset)
 			
-			pos = Vector3(offset * cover_spacing, -0.5 * abs_offset, abs_offset * side_offset)
-			rot = Vector3(0, -side_angle * side_multiplier, 0)
+			# Вертикальное расположение (по оси Y)
+			pos = Vector3(offset * abs_offset, offset * cover_spacing, abs_offset * 1.5)
+			# Фиксированный поворот для всех обложек
+			rot = Vector3(-side_angle_x, side_angle_y, 0)
 			scl = Vector3(0.8, 0.8, 0.8)
 			cover.set_selected(false)
 		
-		if first_update:
-			cover.position = pos
-			cover.rotation_degrees = rot
-			cover.scale = scl
-		
-		cover.set_target_transform(pos, rot, scl)
+		# Устанавливаем target только если анимация не завершена
+		if not cover.is_animation_finished:
+			if first_update:
+				cover.position = pos
+				cover.rotation_degrees = rot
+				cover.scale = scl
+			cover.set_target_transform(pos, rot, scl)
 	
 	first_update = false
 
-func _on_left_pressed():
-	if games.size() <= 1:
-		return
-	
-	current_index -= 1
-	if current_index < 0:
-		current_index = games.size() - 1
-	
-	update_display()
-
-func _on_right_pressed():
+# Обновленные функции для вертикального движения
+func _on_up_pressed():
 	if games.size() <= 1:
 		return
 	
 	current_index += 1
 	if current_index >= games.size():
 		current_index = 0
+	
+	update_display()
+
+func _on_down_pressed():
+	if games.size() <= 1:
+		return
+	
+	current_index -= 1
+	if current_index < 0:
+		current_index = games.size() - 1
 	
 	update_display()
 
@@ -212,30 +208,51 @@ func _input(event):
 		var device_id = event.device
 		update_controller_icon(device_id)
 
-	if event.is_action_pressed("ui_left") or event.is_action_pressed("left_pad"):
-		_on_left_pressed()
-	elif event.is_action_pressed("ui_right") or event.is_action_pressed("right_pad"):
-		_on_right_pressed()
+	# Изменено на вертикальное управление
+	if event.is_action_pressed("ui_up") or event.is_action_pressed("up_pad"):
+		_on_up_pressed()
+	elif event.is_action_pressed("ui_down") or event.is_action_pressed("down_pad"):
+		_on_down_pressed()
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
 		launch_current_game()
 	elif event.is_action_pressed("menu_pad"):
 		add_game()
+	elif event.is_action_pressed("view_key") or event.is_action_pressed("view_pad"):
+		game_info()
+
+func move_viewport_container(x: int, time: float):
+	var tween := create_tween()
+	tween.tween_property(viewport_container, "position:x", x, time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tween.finished
+
+func game_info():
+	if games.is_empty():
+		return
+	
+	var current_game = games[current_index]
+	
+	if current_index < game_covers.size():
+		var current_cover = game_covers[current_index]
+		if is_instance_valid(current_cover):
+			current_cover.start_fast_spin_move_animation()
+			move_viewport_container(10, 0.9)
 
 # Запускает выбранную игру с анимацией
 func launch_current_game():
 	if games.is_empty():
 		return
 	
+	if current_index < game_covers.size():
+		var current_cover = game_covers[current_index]
+		if is_instance_valid(current_cover):
+			current_cover.stop_fast_spin_move_animation()
+			move_viewport_container(-465, 0.9)
+	
 	var current_game = games[current_index]
 	
 	if not current_game.get("executable") or current_game.executable == "":
 		show_notification("У игры не указан исполняемый файл!")
 		return
-	
-	if current_index < game_covers.size():
-		var current_cover = game_covers[current_index]
-		if is_instance_valid(current_cover):
-			current_cover.start_spin_animation()
 	
 	await get_tree().create_timer(1.0).timeout
 	

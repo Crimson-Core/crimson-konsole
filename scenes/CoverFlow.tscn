@@ -32,16 +32,16 @@ shader_parameter/colour_2 = Color(0, 0.419608, 0.705882, 1)
 shader_parameter/colour_3 = Color(0.0862745, 0.137255, 0.145098, 1)
 shader_parameter/contrast = 3.5
 shader_parameter/lighting = 0.3
-shader_parameter/spin_amount = 0.2
+shader_parameter/spin_amount = 0.27
 shader_parameter/pixel_filter = 740.0
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
 background_color = Color(0.513233, 0.513233, 0.513233, 1)
-background_energy_multiplier = 0.5
+background_energy_multiplier = 2.64
 ambient_light_source = 2
 ambient_light_color = Color(0.513726, 0.513726, 0.513726, 1)
-ambient_light_energy = 2.0
+ambient_light_energy = 3.0
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6hi8n"]
 
@@ -59,7 +59,10 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 0.8
-offset_bottom = 216.0
+offset_left = -462.0
+offset_top = 35.0
+offset_right = -462.0
+offset_bottom = 251.0
 grow_horizontal = 2
 grow_vertical = 2
 stretch = true
@@ -74,7 +77,7 @@ offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="background" type="ColorRect" parent="ViewportContainer/CanvasLayer/Control"]
-modulate = Color(0.641934, 0.641934, 0.641934, 1)
+modulate = Color(0.529067, 0.529067, 0.529067, 1)
 material = SubResource("ShaderMaterial_1pbjt")
 layout_mode = 1
 anchors_preset = -1
@@ -91,11 +94,11 @@ size = Vector2i(1920, 1080)
 render_target_update_mode = 4
 
 [node name="Camera3D" type="Camera3D" parent="ViewportContainer/SubViewport"]
-transform = Transform3D(1, 0, 0, 0, 0.99944, 0.0334694, 0, -0.0334694, 0.99944, 0, 2.47958, 8.07705)
+transform = Transform3D(1, 0, 0, 0, 0.99944, 0.0334694, 0, -0.0334694, 0.99944, 0.505957, 2.37145, 8.07705)
 fov = 60.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="ViewportContainer/SubViewport"]
-transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 4, 0)
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 4, -2.40433)
 shadow_enabled = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="ViewportContainer/SubViewport"]
@@ -140,33 +143,6 @@ icon = ExtResource("3_6hi8n")
 icon_alignment = 1
 expand_icon = true
 script = ExtResource("3_1pbjt")
-
-[node name="LeftButton" type="Button" parent="Keyboard"]
-layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_left = 20.0
-offset_top = 495.0
-offset_right = 70.0
-offset_bottom = 545.0
-grow_vertical = 2
-text = "<"
-
-[node name="RightButton" type="Button" parent="Keyboard"]
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = 1810.0
-offset_top = 495.0
-offset_right = 1860.0
-offset_bottom = 545.0
-grow_horizontal = 0
-grow_vertical = 2
-text = ">"
 
 [node name="Controller" type="Control" parent="Keyboard"]
 anchors_preset = 0
