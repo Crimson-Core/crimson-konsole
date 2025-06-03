@@ -1,3 +1,4 @@
+class_name CoverFlow
 extends Control
 
 @onready var viewport_container = $ViewportContainer
@@ -20,13 +21,23 @@ var current_index: int = 0
 @export var side_angle_x: float = 0.0   # Небольшой наклон по X
 @export var side_offset: float = 2.0
 
+const NotificationLogicClass = preload("res://scripts/NotificationLogic.gd")
+var notification = NotificationLogicClass.new()
+var notification_icon = load("res://logo.png")
+
 const GamepadTypeClass = preload("res://scripts/GamepadType.gd")
 var gamepadtype = GamepadTypeClass.new()
+
+const MusicPlayerClass = preload("res://scripts/nodes/MusicPlayer.gd")
+var musicplayer = MusicPlayerClass.new()
+
 var game_cover_scene: PackedScene
 var first_update: bool = true
 var current_input_method = "keyboard"
 
 func _ready():
+	musicplayer.set_volume(-20.0)
+	add_child(notification)
 	load_games()
 	setup_keyboard_ui()
 	
@@ -219,6 +230,8 @@ func _input(event):
 		add_game()
 	elif event.is_action_pressed("view_key") or event.is_action_pressed("view_pad"):
 		game_info()
+	elif event.is_action_pressed("skip_key"):
+		musicplayer.next_track()
 
 func move_viewport_container(x: int, time: float):
 	var tween := create_tween()
@@ -251,18 +264,18 @@ func launch_current_game():
 	var current_game = games[current_index]
 	
 	if not current_game.get("executable") or current_game.executable == "":
-		show_notification("У игры не указан исполняемый файл!")
+		notification.show_notification("У игры не указан исполняемый файл!", notification_icon)
 		return
 	
 	await get_tree().create_timer(1.0).timeout
 	
 	if launch_game_executable(current_game.executable):
-		show_notification("Игра \"" + current_game.title + "\" запущена!")
+		notification.show_notification("Игра \"" + current_game.title + "\" запущена!", notification_icon)
 
 # Запускает исполняемый файл игры в зависимости от ОС
 func launch_game_executable(executable_path: String) -> bool:
 	if executable_path == "" or not FileAccess.file_exists(executable_path):
-		show_notification("Исполняемый файл не найден!")
+		notification.show_notification("Исполняемый файл не найден!", notification_icon)
 		return false
 	
 	var extension = executable_path.get_extension().to_lower()
@@ -282,7 +295,7 @@ func launch_game_executable(executable_path: String) -> bool:
 					command = "cmd"
 					arguments = ["/c", "cd /d \"" + working_directory + "\" && " + executable_path]
 				_:
-					show_notification("Неподдерживаемый файл для Windows!")
+					notification.show_notification("Неподдерживаемый файл для Windows!", notification_icon)
 					return false
 		
 		"Linux":
@@ -296,7 +309,7 @@ func launch_game_executable(executable_path: String) -> bool:
 						command = "sh"
 						arguments = ["-c", "cd \"" + working_directory + "\" && umu-run \"" + executable_path + "\""]
 					else:
-						show_notification("Wine не установлен! Невозможно запустить .exe файлы")
+						notification.show_notification("Wine не установлен! Невозможно запустить .exe файлы", notification_icon)
 						return false
 				"":
 					OS.execute("chmod", ["+x", executable_path])
@@ -307,7 +320,7 @@ func launch_game_executable(executable_path: String) -> bool:
 					command = "sh"
 					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
 				_:
-					show_notification("Неподдерживаемый файл для Linux!")
+					notification.show_notification("Неподдерживаемый файл для Linux!", notification_icon)
 					return false
 		
 		"macOS":
@@ -324,11 +337,11 @@ func launch_game_executable(executable_path: String) -> bool:
 					command = "sh"
 					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
 				_:
-					show_notification("Неподдерживаемый файл для macOS!")
+					notification.show_notification("Неподдерживаемый файл для macOS!", notification_icon)
 					return false
 		
 		_:
-			show_notification("Неподдерживаемая операционная система!")
+			notification.show_notification("Неподдерживаемая операционная система!", notification_icon)
 			return false
 	
 	var pid = OS.create_process(command, arguments, false)
@@ -338,19 +351,6 @@ func is_wine_available() -> bool:
 	var output = []
 	var exit_code = OS.execute("which", ["umu-run"], output)
 	return exit_code == 0 and output.size() > 0
-
-func show_notification(message: String):
-	var notification = AcceptDialog.new()
-	notification.dialog_text = message
-	notification.title = "Информация"
-	notification.size = Vector2i(400, 150)
-	add_child(notification)
-	notification.popup_centered()
-	
-	get_tree().create_timer(2.0).timeout.connect(func(): 
-		if is_instance_valid(notification):
-			notification.queue_free()
-	)
 
 func add_game():
 	get_tree().change_scene_to_file("res://scenes/game_add.tscn")

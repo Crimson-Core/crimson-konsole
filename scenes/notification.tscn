@@ -1,0 +1,181 @@
+[gd_scene load_steps=13 format=3 uid="uid://dw4sdolfk7i40"]
+
+[ext_resource type="Texture2D" uid="uid://4sug6ir14oia" path="res://assets/ui/notification/black.png" id="1_mfwk2"]
+[ext_resource type="Texture2D" uid="uid://cvfgetgodc410" path="res://assets/ui/notification/red.png" id="2_yejxv"]
+[ext_resource type="Texture2D" uid="uid://bbhvso566kugp" path="res://assets/ui/notification/gray.png" id="3_8ldpm"]
+[ext_resource type="FontFile" uid="uid://b3or8os1cyhpm" path="res://assets/fonts/DoHyeon-Regular.ttf" id="4_yejxv"]
+[ext_resource type="FontFile" uid="uid://bl33m6ku6ffwm" path="res://assets/fonts/Jost/Jost-VariableFont_wght.ttf" id="5_8ldpm"]
+[ext_resource type="Texture2D" uid="uid://bpx3hq3fbkh8d" path="res://logo.png" id="6_tafmc"]
+
+[sub_resource type="Animation" id="Animation_tafmc"]
+resource_name = "notification_animation"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("black:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.166667),
+"transitions": PackedFloat32Array(1, 1.27456),
+"update": 0,
+"values": [Vector2(450, 0), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("red:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.133333, 0.3),
+"transitions": PackedFloat32Array(1, 1.27456),
+"update": 0,
+"values": [Vector2(450, 0), Vector2(0, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("gray:position")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0.266667, 0.433333),
+"transitions": PackedFloat32Array(0.68302, 0.68302),
+"update": 0,
+"values": [Vector2(450, 0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_syajt"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("gray:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_mfwk2"]
+resource_name = "notification_animation_rev"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("black:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.233333, 0.4),
+"transitions": PackedFloat32Array(1, 1.27456),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(450, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("red:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.133333, 0.3),
+"transitions": PackedFloat32Array(1, 1.27456),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(450, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("gray:position")
+tracks/2/interp = 2
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(1.49012e-08, 0.166667),
+"transitions": PackedFloat32Array(0.68302, 0.68302),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(450, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_1fyay"]
+_data = {
+&"RESET": SubResource("Animation_syajt"),
+&"notification_animation": SubResource("Animation_tafmc"),
+&"notification_animation_rev": SubResource("Animation_mfwk2")
+}
+
+[sub_resource type="FontVariation" id="FontVariation_tafmc"]
+fallbacks = Array[Font]([ExtResource("5_8ldpm")])
+base_font = ExtResource("4_yejxv")
+
+[sub_resource type="LabelSettings" id="LabelSettings_8ldpm"]
+font = SubResource("FontVariation_tafmc")
+font_size = 32
+
+[node name="Notification" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -1462.0
+offset_bottom = -930.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_1fyay")
+}
+
+[node name="black" type="TextureRect" parent="."]
+offset_right = 289.0
+offset_bottom = 92.0
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("1_mfwk2")
+expand_mode = 1
+
+[node name="red" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 289.0
+offset_bottom = 92.0
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_yejxv")
+expand_mode = 1
+
+[node name="gray" type="TextureRect" parent="."]
+offset_right = 289.0
+offset_bottom = 92.0
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("3_8ldpm")
+expand_mode = 1
+
+[node name="Text" type="Label" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 223.0
+offset_top = 6.0
+offset_right = 563.0
+offset_bottom = 208.0
+scale = Vector2(0.6, 0.6)
+text = "Now Playing:
+Dusqk - Sanctuary OS - 12 Sanctuary 11"
+label_settings = SubResource("LabelSettings_8ldpm")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+uppercase = true
+
+[node name="Icon" type="TextureRect" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 96.0
+offset_top = 15.0
+offset_right = 162.0
+offset_bottom = 83.0
+scale = Vector2(1.52446, 1.52446)
+texture = ExtResource("6_tafmc")
+expand_mode = 1

@@ -122,7 +122,7 @@ func setup_materials():
 		material.albedo_color = Color.WHITE
 		material.metallic = 0.1
 		material.roughness = 0.7
-		material.specular = 0.5
+		#material.specular = 0.5
 		material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	front_material.albedo_color = Color(0.2, 0.4, 0.8)
 	back_material.albedo_color = Color(0.8, 0.2, 0.2)

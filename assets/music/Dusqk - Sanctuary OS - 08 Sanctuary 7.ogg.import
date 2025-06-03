@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://n3denx2x6pt6"
+path="res://.godot/imported/Dusqk - Sanctuary OS - 08 Sanctuary 7.ogg-071710cb00ea2eef213d2d1ac2227600.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/music/Dusqk - Sanctuary OS - 08 Sanctuary 7.ogg"
+dest_files=["res://.godot/imported/Dusqk - Sanctuary OS - 08 Sanctuary 7.ogg-071710cb00ea2eef213d2d1ac2227600.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

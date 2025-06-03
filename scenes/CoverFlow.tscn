@@ -98,8 +98,7 @@ transform = Transform3D(1, 0, 0, 0, 0.99944, 0.0334694, 0, -0.0334694, 0.99944, 
 fov = 60.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="ViewportContainer/SubViewport"]
-transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 4, -2.40433)
-shadow_enabled = true
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, -0.0205674, 4.48435)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="ViewportContainer/SubViewport"]
 environment = SubResource("Environment_1")
