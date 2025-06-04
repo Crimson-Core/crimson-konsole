@@ -15,8 +15,9 @@ extends Node
 	"res://assets/music/sanctuary12.ogg",
 ]
 
-@export var target_volume: float = -20.0  # Сделал экспортируемой для настройки в инспекторе
-@export var fade_in_duration: float = 5.0  # Тоже экспортируемая
+@export var target_volume: float = -20.0
+@export var fade_in_duration: float = 5.0
+@export var fade_pause_duration: float = 1.0  # Длительность фейда для паузы и возобновления
 
 var sanctuary_cover = load("res://assets/music/cover.jpg")
 
@@ -29,7 +30,6 @@ const NotificationLogicClass = preload("res://scripts/NotificationLogic.gd")
 var notification = NotificationLogicClass.new()
 
 func _ready():
-	# Инициализация AudioStreamPlayer
 	print("Инициализация музыки")
 	add_child(notification)
 	if not audio_player:
@@ -37,7 +37,6 @@ func _ready():
 		add_child(audio_player)
 		audio_player.finished.connect(_on_audio_stream_player_finished)
 	
-	# Ждём фрейм для стабильности
 	await get_tree().process_frame
 	start_music()
 
@@ -46,7 +45,6 @@ func start_music():
 		print("хуйня, нет треков для воспроизведения!")
 		return
 	
-	# Создаём и перемешиваем плейлист
 	shuffled_playlist = background_tracks.duplicate()
 	shuffled_playlist.shuffle()
 	current_track_index = 0
@@ -73,7 +71,6 @@ func play_current_track():
 		next_track()
 		return
 	
-	# Настраиваем и запускаем трек
 	audio_player.volume_db = -50.0
 	audio_player.stream = audio_stream
 	audio_player.play()
@@ -116,7 +113,6 @@ func _on_audio_stream_player_finished():
 	print("трек закончился, переключаем")
 	next_track()
 
-# Методы управления
 func stop_music():
 	if audio_player:
 		if tween:
@@ -125,20 +121,36 @@ func stop_music():
 		print("музыка стоп")
 
 func pause_music():
-	if audio_player:
-		audio_player.stream_paused = true
-		print("музыка на паузе")
+	if audio_player and not audio_player.stream_paused:
+		if tween:
+			tween.kill()
+		tween = create_tween()
+		tween.set_ease(Tween.EASE_IN)
+		tween.set_trans(Tween.TRANS_CUBIC)
+		tween.tween_method(set_audio_volume, audio_player.volume_db, -50.0, fade_pause_duration)
+		tween.tween_callback(func(): 
+			audio_player.stream_paused = true
+			print("музыка на паузе после фейда")
+		)
 
 func resume_music():
-	if audio_player:
+	if audio_player and audio_player.stream_paused:
 		audio_player.stream_paused = false
-		print("музыка снова играет")
+		if tween:
+			tween.kill()
+		tween = create_tween()
+		tween.set_ease(Tween.EASE_IN)
+		tween.set_trans(Tween.TRANS_CUBIC)
+		tween.tween_method(set_audio_volume, audio_player.volume_db, target_volume, fade_pause_duration)
+		tween.tween_callback(func(): 
+			print("музыка снова играет после фейда")
+		)
 
 func set_volume(volume_db: float):
 	target_volume = volume_db
 	if audio_player and (not tween or not tween.is_valid()):
 		audio_player.volume_db = volume_db
-		print("громкость установлена: ", volume_db)
+		print("!!!!!!! ГРОМКОСТЬ УСТАНОВЛЕНА: ", volume_db)
 
 func set_fade_in_duration(duration: float):
 	fade_in_duration = duration

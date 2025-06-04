@@ -4,10 +4,10 @@
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_1pbjt"]
 [ext_resource type="Script" uid="uid://cnpic13544agl" path="res://scripts/add_button.gd" id="3_1pbjt"]
 [ext_resource type="Texture2D" uid="uid://dwuqa2jdp4o7f" path="res://assets/icons/settings.png" id="3_6hi8n"]
-[ext_resource type="Texture2D" uid="uid://bdpbjpmiqf5yn" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Default/keyboard.png" id="5_03102"]
+[ext_resource type="Texture2D" uid="uid://s48w86ax45hu" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard.png" id="5_35aor"]
 [ext_resource type="Texture2D" uid="uid://biwdoaj2uat3f" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Default/keyboard_enter.png" id="6_6hi8n"]
 [ext_resource type="Texture2D" uid="uid://dlxhgg7unex3f" path="res://assets/kenney_input-prompts_1.4/Xbox Series/Double/xbox_button_color_a.png" id="6_yspgm"]
-[ext_resource type="Texture2D" uid="uid://cch3fg5ra3dgu" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Default/keyboard_arrows_horizontal.png" id="7_8dok0"]
+[ext_resource type="Texture2D" uid="uid://dlxlijwfw4tal" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard_arrows_vertical.png" id="7_35aor"]
 [ext_resource type="Texture2D" uid="uid://c6p1xu0ee11m" path="res://assets/kenney_input-prompts_1.4/Xbox Series/Double/xbox_dpad_horizontal.png" id="7_03102"]
 [ext_resource type="Texture2D" uid="uid://tbog4hp8t585" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard_escape.png" id="8_8dok0"]
 [ext_resource type="Texture2D" uid="uid://sqgrucqfcdiq" path="res://assets/kenney_input-prompts_1.4/Xbox Series/Double/controller_xboxseries.png" id="8_yspgm"]
@@ -155,7 +155,7 @@ offset_top = 932.0
 offset_right = 548.0
 offset_bottom = 1412.0
 scale = Vector2(0.2, 0.2)
-texture = ExtResource("5_03102")
+texture = ExtResource("5_35aor")
 
 [node name="KeyboardInstruct2" type="Label" parent="Keyboard/Controller"]
 layout_mode = 1
@@ -220,7 +220,7 @@ offset_top = 988.0
 offset_right = 1239.0
 offset_bottom = 1468.0
 scale = Vector2(0.15, 0.15)
-texture = ExtResource("7_8dok0")
+texture = ExtResource("7_35aor")
 
 [node name="Panel" type="Panel" parent="Keyboard/Instruction"]
 layout_mode = 0

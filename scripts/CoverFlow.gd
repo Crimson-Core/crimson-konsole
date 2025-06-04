@@ -16,9 +16,9 @@ var games: Array[GameLoader.GameData] = []
 var game_covers: Array[GameCover3D] = []
 var current_index: int = 0
 
-@export var cover_spacing: float = 6.0  # Уменьшено для вертикального расположения
-@export var side_angle_y: float = 35.0  # Поворот по Y для показа боковой обложки
-@export var side_angle_x: float = 0.0   # Небольшой наклон по X
+@export var cover_spacing: float = 6.0
+@export var side_angle_y: float = 35.0
+@export var side_angle_x: float = 0.0
 @export var side_offset: float = 2.0
 
 const NotificationLogicClass = preload("res://scripts/NotificationLogic.gd")
@@ -37,10 +37,13 @@ var time_tracker: GameTimeTracker
 var game_cover_scene: PackedScene
 var first_update: bool = true
 var current_input_method = "keyboard"
+var last_device_id: int = -1
 
 func _ready():
-	musicplayer.set_volume(-20.0)
+	add_child(musicplayer)
 	add_child(notification)
+	
+	musicplayer.set_volume(-20.0)
 	
 	time_tracker = GameTimeTrackerClass.get_instance()
 	
@@ -55,12 +58,10 @@ func _ready():
 	await get_tree().process_frame
 	update_display()
 
-# Загружает список игр и очищает неиспользуемые обложки
 func load_games():
 	games = GameLoader.load_all_games()
 	cleanup_unused_covers()
 
-# Удаляет неиспользуемые файлы обложек из папки covers
 func cleanup_unused_covers():
 	var covers_dir = "user://covers/"
 	
@@ -100,7 +101,6 @@ func setup_gamepad_ui():
 	keyboard_control.visible = false
 	gamepad_control.visible = true
 
-# Обновляет иконки контроллера в зависимости от типа геймпада
 func update_controller_icon(device_id: int):
 	var joy_name = Input.get_joy_name(device_id).to_lower()
 	var controller_type = gamepadtype.detect_controller_type(joy_name)
@@ -122,7 +122,6 @@ func update_controller_icon(device_id: int):
 			dpad_button.texture = load(gamepadtype.ICON_GENERIC_DPAD)
 			start_button.texture = load(gamepadtype.ICON_GENERIC_START)
 
-# Создает 3D обложки для всех игр в системе coverflow
 func setup_coverflow():
 	for cover in game_covers:
 		if is_instance_valid(cover):
@@ -146,7 +145,6 @@ func setup_coverflow():
 		viewport_3d.add_child(cover_instance)
 		game_covers.append(cover_instance)
 
-# Обновляет позиции и анимации всех обложек для вертикального coverflow
 func update_display():
 	if games.is_empty():
 		game_title_label.text = "Нет игр"
@@ -165,23 +163,17 @@ func update_display():
 		var scl = Vector3.ONE
 		
 		if offset == 0:
-			# Центральная обложка - слегка повернута для показа боковой стороны
 			pos = Vector3(0, 0, 0)
 			rot = Vector3(-side_angle_x, side_angle_y, 0)
 			scl = Vector3(1.2, 1.2, 1.2)
 			cover.set_selected(true)
 		else:
-			# Боковые обложки расположены вертикально
 			var abs_offset = abs(offset)
-			
-			# Вертикальное расположение (по оси Y)
 			pos = Vector3(offset * abs_offset, offset * cover_spacing, abs_offset * 1.5)
-			# Фиксированный поворот для всех обложек
 			rot = Vector3(-side_angle_x, side_angle_y, 0)
 			scl = Vector3(0.8, 0.8, 0.8)
 			cover.set_selected(false)
 		
-		# Устанавливаем target только если анимация не завершена
 		if not cover.is_animation_finished:
 			if first_update:
 				cover.position = pos
@@ -191,7 +183,6 @@ func update_display():
 	
 	first_update = false
 
-# Обновленные функции для вертикального движения
 func _on_up_pressed():
 	if games.size() <= 1:
 		return
@@ -212,7 +203,6 @@ func _on_down_pressed():
 	
 	update_display()
 
-# Обработка ввода с клавиатуры и геймпада
 func _input(event):
 	if event is InputEventKey or event is InputEventMouseButton:
 		if current_input_method != "keyboard":
@@ -223,13 +213,15 @@ func _input(event):
 			current_input_method = "gamepad"
 			setup_gamepad_ui()
 		var device_id = event.device
+		last_device_id = device_id
 		update_controller_icon(device_id)
 
-	# Изменено на вертикальное управление
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("up_pad"):
 		_on_up_pressed()
+		_trigger_vibration(1.0, 0.0, 0.1)
 	elif event.is_action_pressed("ui_down") or event.is_action_pressed("down_pad"):
 		_on_down_pressed()
+		_trigger_vibration(1.0, 0.0, 0.1)
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
 		launch_current_game()
 	elif event.is_action_pressed("menu_pad"):
@@ -238,6 +230,12 @@ func _input(event):
 		game_info()
 	elif event.is_action_pressed("skip_key"):
 		musicplayer.next_track()
+
+func _trigger_vibration(weak_strength: float, strong_strength: float, duration_sec: float) -> void:
+	if last_device_id < 0:
+		return
+	Input.start_joy_vibration(last_device_id, weak_strength, strong_strength, duration_sec)
+
 
 func move_viewport_container(x: int, time: float):
 	var tween := create_tween()
@@ -256,7 +254,6 @@ func game_info():
 			current_cover.start_fast_spin_move_animation()
 			move_viewport_container(10, 0.9)
 
-# Запускает выбранную игру с анимацией
 func launch_current_game():
 	if games.is_empty():
 		return
@@ -278,7 +275,6 @@ func launch_current_game():
 	if launch_game_executable(current_game.executable):
 		notification.show_notification("Игра \"" + current_game.title + "\" запущена!", notification_icon)
 
-# Запускает исполняемый файл игры в зависимости от ОС
 func launch_game_executable(executable_path: String) -> bool:
 	if executable_path == "" or not FileAccess.file_exists(executable_path):
 		notification.show_notification("Исполняемый файл не найден!", notification_icon)
@@ -350,18 +346,29 @@ func launch_game_executable(executable_path: String) -> bool:
 			notification.show_notification("Неподдерживаемая операционная система!", notification_icon)
 			return false
 	
-	# ИЗМЕНЕННАЯ ЧАСТЬ: Используем асинхронный запуск для получения PID
 	var pid = OS.create_process(command, arguments, false)
 	
 	if pid > 0:
-		# Начинаем отслеживание времени игры
 		var current_game = games[current_index]
 		time_tracker.start_tracking(current_game.title, pid)
 		print("Игра запущена с PID: ", pid, " - начинаем отслеживание времени")
+		
+		musicplayer.pause_music()
+		
+		# Запускаем асинхронный мониторинг процесса
+		monitor_process(pid, current_game.title)
+		
 		return true
 	else:
 		print("Ошибка запуска игры, PID: ", pid)
 		return false
+
+func monitor_process(pid: int, game_title: String):
+	while OS.is_process_running(pid):
+		await get_tree().create_timer(1.0).timeout
+	time_tracker.stop_tracking()
+	musicplayer.resume_music()
+	print("Игра ", game_title, " с PID: ", pid, " завершена, трекинг остановлен")
 
 func is_wine_available() -> bool:
 	var output = []
@@ -371,7 +378,17 @@ func is_wine_available() -> bool:
 func add_game():
 	get_tree().change_scene_to_file("res://scenes/game_add.tscn")
 
-# Обновляет список игр после добавления новых
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+			if musicplayer:
+				musicplayer.pause_music()
+			set_process_input(false)
+		NOTIFICATION_WM_WINDOW_FOCUS_IN:
+			if musicplayer and not OS.is_process_running(time_tracker.current_pid):
+				musicplayer.resume_music()
+			set_process_input(true)
+
 func refresh_games():
 	load_games()
 	if current_index >= games.size():
