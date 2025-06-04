@@ -31,6 +31,9 @@ var gamepadtype = GamepadTypeClass.new()
 const MusicPlayerClass = preload("res://scripts/nodes/MusicPlayer.gd")
 var musicplayer = MusicPlayerClass.new()
 
+const GameTimeTrackerClass = preload("res://scripts/GameTimeTracker.gd")
+var time_tracker: GameTimeTracker
+
 var game_cover_scene: PackedScene
 var first_update: bool = true
 var current_input_method = "keyboard"
@@ -38,6 +41,9 @@ var current_input_method = "keyboard"
 func _ready():
 	musicplayer.set_volume(-20.0)
 	add_child(notification)
+	
+	time_tracker = GameTimeTrackerClass.get_instance()
+	
 	load_games()
 	setup_keyboard_ui()
 	
@@ -344,8 +350,18 @@ func launch_game_executable(executable_path: String) -> bool:
 			notification.show_notification("Неподдерживаемая операционная система!", notification_icon)
 			return false
 	
+	# ИЗМЕНЕННАЯ ЧАСТЬ: Используем асинхронный запуск для получения PID
 	var pid = OS.create_process(command, arguments, false)
-	return pid > 0
+	
+	if pid > 0:
+		# Начинаем отслеживание времени игры
+		var current_game = games[current_index]
+		time_tracker.start_tracking(current_game.title, pid)
+		print("Игра запущена с PID: ", pid, " - начинаем отслеживание времени")
+		return true
+	else:
+		print("Ошибка запуска игры, PID: ", pid)
+		return false
 
 func is_wine_available() -> bool:
 	var output = []
