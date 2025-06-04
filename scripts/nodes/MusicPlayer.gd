@@ -62,7 +62,7 @@ func play_current_track():
 	
 	var track_path = shuffled_playlist[current_track_index]
 	
-	if not FileAccess.file_exists(track_path):
+	if not ResourceLoader.exists(track_path):
 		print("файл не найден: ", track_path)
 		next_track()
 		return
@@ -82,7 +82,7 @@ func play_current_track():
 	print("♪ играет: ", track_path.get_file())
 	var raw_name = track_path.get_file().get_basename()
 	var pretty_name = raw_name.replace("_", " ").capitalize()
-	var notification_text = "NOW PLAYING:\n" + pretty_name
+	var notification_text = "СЕЙЧАС ИГРАЕТ:\n" + pretty_name
 	notification.show_notification(notification_text, sanctuary_cover)
 
 func start_fade_in():

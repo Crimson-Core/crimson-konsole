@@ -7,6 +7,21 @@
 [ext_resource type="FontFile" uid="uid://bl33m6ku6ffwm" path="res://assets/fonts/Jost/Jost-VariableFont_wght.ttf" id="5_8ldpm"]
 [ext_resource type="Texture2D" uid="uid://bpx3hq3fbkh8d" path="res://logo.png" id="6_tafmc"]
 
+[sub_resource type="Animation" id="Animation_syajt"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("gray:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
 [sub_resource type="Animation" id="Animation_tafmc"]
 resource_name = "notification_animation"
 tracks/0/type = "value"
@@ -44,21 +59,6 @@ tracks/2/keys = {
 "transitions": PackedFloat32Array(0.68302, 0.68302),
 "update": 0,
 "values": [Vector2(450, 0), Vector2(0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_syajt"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("gray:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(0, 0)]
 }
 
 [sub_resource type="Animation" id="Animation_mfwk2"]
@@ -132,6 +132,7 @@ libraries = {
 }
 
 [node name="black" type="TextureRect" parent="."]
+layout_mode = 0
 offset_right = 289.0
 offset_bottom = 92.0
 scale = Vector2(1.5, 1.5)
@@ -147,6 +148,7 @@ texture = ExtResource("2_yejxv")
 expand_mode = 1
 
 [node name="gray" type="TextureRect" parent="."]
+layout_mode = 0
 offset_right = 289.0
 offset_bottom = 92.0
 scale = Vector2(1.5, 1.5)
