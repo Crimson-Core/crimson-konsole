@@ -50,6 +50,7 @@ func _ready():
 	elif OS.get_name() == "Linux":
 		executable_dialog.add_filter("*.sh", "Shell Scripts")
 		executable_dialog.add_filter("*.exe", "Windows Executable (Wine)")
+		executable_dialog.add_filter("*.x86_64", "x86 64 Bit Executable")
 		executable_dialog.add_filter("*", "All Files")
 	elif OS.get_name() == "macOS":
 		executable_dialog.add_filter("*.app", "macOS Applications")

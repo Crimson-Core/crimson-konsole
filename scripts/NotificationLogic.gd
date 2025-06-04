@@ -17,7 +17,7 @@ func show_notification(message: String, texture: Texture2D) -> void:
 		var notification_node = notification_scene.instantiate()
 		add_child(notification_node)
 		
-		notification_node.position = Vector2(1487.0, 245.0)
+		notification_node.position = Vector2(1487.0, 150.0)
 		
 		var notification_text = notification_node.get_node_or_null("Text")
 		var notification_icon = notification_node.get_node_or_null("Icon")

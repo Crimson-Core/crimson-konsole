@@ -1,0 +1,184 @@
+[gd_scene load_steps=11 format=3 uid="uid://ddp74nsq1w4v7"]
+
+[ext_resource type="FontFile" uid="uid://bl33m6ku6ffwm" path="res://assets/fonts/Jost/Jost-VariableFont_wght.ttf" id="1_o4m3c"]
+[ext_resource type="Texture2D" uid="uid://cpfiay5pqs3l3" path="res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_home.png" id="2_waqlc"]
+[ext_resource type="Texture2D" uid="uid://vckwtjp05t7f" path="res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png" id="3_waqlc"]
+[ext_resource type="Texture2D" uid="uid://dwuqa2jdp4o7f" path="res://assets/icons/settings.png" id="4_ad6hi"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ad6hi"]
+bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o4m3c"]
+bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
+
+[sub_resource type="Animation" id="Animation_o4m3c"]
+resource_name = "show_panel"
+length = 0.15
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 0.329877),
+"update": 0,
+"values": [Vector2(-365, 137), Vector2(0, 137)]
+}
+
+[sub_resource type="Animation" id="Animation_waqlc"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 137)]
+}
+
+[sub_resource type="Animation" id="Animation_ad6hi"]
+resource_name = "hide_panel"
+length = 0.15
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.0333333, 0.15),
+"transitions": PackedFloat32Array(1, 0.329877),
+"update": 0,
+"values": [Vector2(0, 137), Vector2(-365, 137)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ad6hi"]
+_data = {
+&"RESET": SubResource("Animation_waqlc"),
+&"hide_panel": SubResource("Animation_ad6hi"),
+&"show_panel": SubResource("Animation_o4m3c")
+}
+
+[node name="SidePanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 137.0
+offset_right = -1574.0
+offset_bottom = -242.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.1, 1.1)
+
+[node name="Box" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ColorRect2" type="ColorRect" parent="Box"]
+visible = false
+layout_mode = 0
+offset_top = -8.0
+offset_right = 339.0
+offset_bottom = 702.0
+color = Color(0.0941176, 0.0352941, 0.0705882, 1)
+
+[node name="ColorRect" type="ColorRect" parent="Box"]
+layout_mode = 0
+offset_top = -28.0
+offset_right = 328.0
+offset_bottom = 686.0
+color = Color(0.156863, 0.156863, 0.156863, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_top = 110.0
+offset_right = 328.0
+offset_bottom = 347.0
+
+[node name="Home" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("1_o4m3c")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
+text = "Home"
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Home"]
+layout_mode = 2
+offset_left = 19.0
+offset_top = 5.0
+offset_right = 83.0
+offset_bottom = 69.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("2_waqlc")
+expand_mode = 1
+
+[node name="Hover" type="ColorRect" parent="VBoxContainer/Home"]
+visible = false
+layout_mode = 0
+offset_right = 4.0
+offset_bottom = 75.0
+color = Color(0.854902, 0.286275, 0.286275, 1)
+
+[node name="GameAdd" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("1_o4m3c")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
+theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
+text = "Add Game"
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/GameAdd"]
+layout_mode = 2
+offset_left = 19.0
+offset_top = 5.0
+offset_right = 83.0
+offset_bottom = 69.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("3_waqlc")
+expand_mode = 1
+
+[node name="Hover" type="ColorRect" parent="VBoxContainer/GameAdd"]
+visible = false
+offset_right = 4.0
+offset_bottom = 75.0
+color = Color(0.854902, 0.286275, 0.286275, 1)
+
+[node name="Settings" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("1_o4m3c")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
+theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
+text = "Settings"
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Settings"]
+layout_mode = 2
+offset_left = 19.0909
+offset_top = 10.8182
+offset_right = 82.0909
+offset_bottom = 70.8182
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("4_ad6hi")
+expand_mode = 1
+
+[node name="Hover" type="ColorRect" parent="VBoxContainer/Settings"]
+visible = false
+offset_right = 4.0
+offset_bottom = 75.0
+color = Color(0.854902, 0.286275, 0.286275, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_ad6hi")
+}

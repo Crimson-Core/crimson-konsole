@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://frybfl02g8cs" path="res://scripts/CoverFlow.gd" id="1"]
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_1pbjt"]
-[ext_resource type="Script" uid="uid://cnpic13544agl" path="res://scripts/add_button.gd" id="3_1pbjt"]
+[ext_resource type="PackedScene" uid="uid://ddp74nsq1w4v7" path="res://scenes/side_panel.tscn" id="2_jdtcr"]
 [ext_resource type="Texture2D" uid="uid://dwuqa2jdp4o7f" path="res://assets/icons/settings.png" id="3_6hi8n"]
 [ext_resource type="Texture2D" uid="uid://s48w86ax45hu" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard.png" id="5_35aor"]
 [ext_resource type="Texture2D" uid="uid://biwdoaj2uat3f" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Default/keyboard_enter.png" id="6_6hi8n"]
@@ -103,6 +103,82 @@ transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -
 [node name="WorldEnvironment" type="WorldEnvironment" parent="ViewportContainer/SubViewport"]
 environment = SubResource("Environment_1")
 
+[node name="Dark" type="ColorRect" parent="."]
+visible = false
+modulate = Color(0, 0, 0, 0.564706)
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+
+[node name="TopLeftPanel" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Bg" type="TextureRect" parent="TopLeftPanel"]
+layout_mode = 0
+offset_right = 1416.0
+offset_bottom = 774.0
+texture = ExtResource("14_ntab5")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="Text" type="TextureRect" parent="TopLeftPanel"]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 6.0
+offset_right = 1344.0
+offset_bottom = 758.0
+texture = ExtResource("15_cp183")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="Logo" type="TextureRect" parent="TopLeftPanel"]
+layout_mode = 0
+offset_left = 31.0
+offset_top = 13.0
+offset_right = 106.0
+offset_bottom = 87.0
+texture = ExtResource("16_35aor")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="TopPanel" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Time" type="Panel" parent="TopPanel"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 803.0
+offset_top = -1.0
+offset_right = 1046.0
+offset_bottom = 73.0
+grow_horizontal = 0
+grow_vertical = 2
+script = ExtResource("17_35aor")
+
+[node name="Label" type="Label" parent="TopPanel/Time"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 4.0
+offset_right = 203.0
+offset_bottom = 71.0
+theme_override_fonts/font = ExtResource("9_66wke")
+theme_override_font_sizes/font_size = 64
+text = "12:00"
+horizontal_alignment = 1
+vertical_alignment = 1
+justification_flags = 139
+
+[node name="Timer" type="Timer" parent="TopPanel/Time"]
+autostart = true
+
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0
 offset_top = 891.0
@@ -131,17 +207,6 @@ vertical_alignment = 1
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
-
-[node name="Button" type="Button" parent="Keyboard"]
-layout_mode = 0
-offset_left = 1712.0
-offset_top = 60.0
-offset_right = 1811.0
-offset_bottom = 157.0
-icon = ExtResource("3_6hi8n")
-icon_alignment = 1
-expand_icon = true
-script = ExtResource("3_1pbjt")
 
 [node name="Controller" type="Control" parent="Keyboard"]
 anchors_preset = 0
@@ -224,17 +289,17 @@ texture = ExtResource("7_35aor")
 
 [node name="Panel" type="Panel" parent="Keyboard/Instruction"]
 layout_mode = 0
-offset_left = 1657.0
-offset_top = 171.0
-offset_right = 1865.0
-offset_bottom = 222.0
+offset_left = 857.0
+offset_top = 107.0
+offset_right = 1065.0
+offset_bottom = 158.0
 
 [node name="Start" type="TextureRect" parent="Keyboard/Instruction"]
 layout_mode = 0
-offset_left = 1660.0
-offset_top = 169.0
-offset_right = 1930.0
-offset_bottom = 445.0
+offset_left = 860.0
+offset_top = 105.0
+offset_right = 1130.0
+offset_bottom = 381.0
 scale = Vector2(0.2, 0.2)
 texture = ExtResource("8_8dok0")
 
@@ -243,13 +308,13 @@ layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 1721.0
-offset_top = 138.0
-offset_right = 1854.0
-offset_bottom = 172.0
+offset_left = 921.0
+offset_top = 74.0
+offset_right = 1054.0
+offset_bottom = 108.0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 24
-text = "Настройки"
+text = "Панель"
 horizontal_alignment = 1
 
 [node name="Gamepad" type="Control" parent="."]
@@ -395,73 +460,10 @@ theme_override_font_sizes/font_size = 24
 text = "Подключен контроллер"
 horizontal_alignment = 1
 
-[node name="TopLeftPanel" type="Control" parent="."]
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="Bg" type="TextureRect" parent="TopLeftPanel"]
-layout_mode = 0
-offset_right = 1416.0
-offset_bottom = 774.0
-texture = ExtResource("14_ntab5")
-expand_mode = 1
-stretch_mode = 4
-
-[node name="Text" type="TextureRect" parent="TopLeftPanel"]
-layout_mode = 0
-offset_left = 14.0
-offset_top = 6.0
-offset_right = 1344.0
-offset_bottom = 758.0
-texture = ExtResource("15_cp183")
-expand_mode = 1
-stretch_mode = 4
-
-[node name="Logo" type="TextureRect" parent="TopLeftPanel"]
-layout_mode = 0
-offset_left = 31.0
-offset_top = 13.0
-offset_right = 106.0
-offset_bottom = 87.0
-texture = ExtResource("16_35aor")
-expand_mode = 1
-stretch_mode = 4
-
-[node name="TopPanel" type="Control" parent="."]
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="Time" type="Panel" parent="TopPanel"]
+[node name="SidePanel" parent="." instance=ExtResource("2_jdtcr")]
+visible = false
 layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = 803.0
-offset_top = -1.0
-offset_right = 1046.0
-offset_bottom = 73.0
-grow_horizontal = 0
-grow_vertical = 2
-script = ExtResource("17_35aor")
-
-[node name="Label" type="Label" parent="TopPanel/Time"]
-layout_mode = 0
-offset_left = 40.0
-offset_top = 4.0
-offset_right = 203.0
-offset_bottom = 71.0
-theme_override_fonts/font = ExtResource("9_66wke")
-theme_override_font_sizes/font_size = 64
-text = "12:00"
-horizontal_alignment = 1
-vertical_alignment = 1
-justification_flags = 139
-
-[node name="Timer" type="Timer" parent="TopPanel/Time"]
-autostart = true
-
-[connection signal="pressed" from="Keyboard/Button" to="Keyboard/Button" method="_on_pressed"]
+offset_left = -12.5
+offset_top = 118.0
+offset_right = -1932.5
+offset_bottom = -271.0
