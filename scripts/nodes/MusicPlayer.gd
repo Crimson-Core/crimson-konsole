@@ -161,3 +161,10 @@ func skip_track():
 		tween.kill()
 	print("скипаем трек")
 	next_track()
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+			pause_music()
+		NOTIFICATION_WM_WINDOW_FOCUS_IN:
+			resume_music()

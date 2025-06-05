@@ -11,11 +11,11 @@ extends Control
 @onready var dpad_button = $Gamepad/Instruction/Navigation/Navigation
 @onready var start_button = $Gamepad/Add/Start
 @onready var controller_icon = $Gamepad/Controller/Icon
-@onready var dark_node = $Dark
-@onready var side_panel = $SidePanel
-@onready var side_panel_animation = $SidePanel/AnimationPlayer
-@onready var side_panel_container = $SidePanel/VBoxContainer
-@onready var side_panel_button_hover = $SidePanel/VBoxContainer/Home/Hover
+#@onready var dark_node = $Dark
+#@onready var side_panel = $SidePanel
+#@onready var side_panel_animation = $SidePanel/AnimationPlayer
+#@onready var side_panel_container = $SidePanel/VBoxContainer
+#@onready var side_panel_button_hover = $SidePanel/VBoxContainer/Home/Hover
 
 var games: Array[GameLoader.GameData] = []
 var game_covers: Array[GameCover3D] = []
@@ -30,11 +30,11 @@ const NotificationLogicClass = preload("res://scripts/NotificationLogic.gd")
 var notification = NotificationLogicClass.new()
 var notification_icon = load("res://logo.png")
 
+const SidePanelClass = preload("res://scripts/nodes/SidePanel.gd")
+var side_panel = SidePanelClass.new()
+
 const GamepadTypeClass = preload("res://scripts/GamepadType.gd")
 var gamepadtype = GamepadTypeClass.new()
-
-const MusicPlayerClass = preload("res://scripts/nodes/MusicPlayer.gd")
-var musicplayer = MusicPlayerClass.new()
 
 const GameTimeTrackerClass = preload("res://scripts/GameTimeTracker.gd")
 var time_tracker: GameTimeTracker
@@ -44,22 +44,14 @@ var first_update: bool = true
 var current_input_method = "keyboard"
 var last_device_id: int = -1
 
-var side_panel_moving = false
-var side_panel_shown = false
-var side_panel_buttons: Array[Button] = []
-var side_panel_current_index: int = 0
-
 func _ready():
-	add_child(musicplayer)
 	add_child(notification)
-	
-	musicplayer.set_volume(-20.0)
+	add_child(side_panel)
 	
 	time_tracker = GameTimeTrackerClass.get_instance()
 	
 	load_games()
 	setup_keyboard_ui()
-	side_panel_init()
 	
 	for device_id in Input.get_connected_joypads():
 		update_controller_icon(device_id)
@@ -68,7 +60,7 @@ func _ready():
 	setup_coverflow()
 	await get_tree().process_frame
 	update_display()
-
+	
 func load_games():
 	games = GameLoader.load_all_games()
 	cleanup_unused_covers()
@@ -228,29 +220,29 @@ func _input(event):
 		update_controller_icon(device_id)
 
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("up_pad"):
-		if side_panel_shown:
-			side_panel_move_focus(-1)
+		if side_panel.side_panel_shown:
+			side_panel.side_panel_move_focus(-1)
 		else:
 			_on_up_pressed()
 		_trigger_vibration(1.0, 0.0, 0.1)
 	elif event.is_action_pressed("ui_down") or event.is_action_pressed("down_pad"):
-		if side_panel_shown:
-			side_panel_move_focus(1)
+		if side_panel.side_panel_shown:
+			side_panel.side_panel_move_focus(1)
 		else:
 			_on_down_pressed()
 		_trigger_vibration(1.0, 0.0, 0.1)
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
-		if side_panel_shown:
-			side_panel_change_scene()
+		if side_panel.side_panel_shown:
+			side_panel.side_panel_change_scene()
 		else:
 			launch_current_game()
 	elif event.is_action_pressed("menu_key") or event.is_action_pressed("menu_pad"):
-		if not side_panel_shown:
-			show_panel()
+		if not side_panel.side_panel_shown:
+			side_panel.show_panel()
 		else:
-			hide_panel()
-	elif event.is_action_pressed("skip_key"):
-		musicplayer.next_track()
+			side_panel.hide_panel()
+	#elif event.is_action_pressed("skip_key"):
+		#musicplayer.next_track()
 
 func _trigger_vibration(weak_strength: float, strong_strength: float, duration_sec: float) -> void:
 	if last_device_id < 0:
@@ -374,7 +366,7 @@ func launch_game_executable(executable_path: String) -> bool:
 		time_tracker.start_tracking(current_game.title, pid)
 		print("Игра запущена с PID: ", pid, " - начинаем отслеживание времени")
 		
-		musicplayer.pause_music()
+		#musicplayer.pause_music()
 		
 		# Запускаем асинхронный мониторинг процесса
 		monitor_process(pid, current_game.title)
@@ -388,7 +380,7 @@ func monitor_process(pid: int, game_title: String):
 	while OS.is_process_running(pid):
 		await get_tree().create_timer(1.0).timeout
 	time_tracker.stop_tracking()
-	musicplayer.resume_music()
+	#musicplayer.resume_music()
 	print("Игра ", game_title, " с PID: ", pid, " завершена, трекинг остановлен")
 
 func is_wine_available() -> bool:
@@ -399,74 +391,13 @@ func is_wine_available() -> bool:
 func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
-			if musicplayer:
-				musicplayer.pause_music()
+			#if musicplayer:
+				#musicplayer.pause_music()
 			set_process_input(false)
 		NOTIFICATION_WM_WINDOW_FOCUS_IN:
-			if musicplayer and not OS.is_process_running(time_tracker.current_pid):
-				musicplayer.resume_music()
+			#if musicplayer and not OS.is_process_running(time_tracker.current_pid):
+				#musicplayer.resume_music()
 			set_process_input(true)
-
-func show_panel():
-	if side_panel_moving or side_panel_shown or side_panel_buttons.is_empty():
-		return
-	
-	dark_node.visible = true
-	side_panel.visible = true
-	if side_panel_animation.has_animation("show_panel"):
-		side_panel_animation.play("show_panel")
-		side_panel_moving = true
-		await side_panel_animation.animation_finished
-		side_panel_moving = false
-		side_panel_shown = true
-		if side_panel_buttons.is_empty() or side_panel_current_index < 0 or side_panel_current_index >= side_panel_buttons.size():
-			side_panel_current_index = 0
-			return
-			
-		side_panel_buttons[side_panel_current_index].grab_focus()
-
-func hide_panel():
-	if side_panel_moving or not side_panel_shown:
-		return
-		
-	if side_panel_animation.has_animation("hide_panel"):
-		side_panel_animation.play("hide_panel")
-		side_panel_moving = true
-		await side_panel_animation.animation_finished
-		side_panel_moving = false
-		dark_node.visible = false
-		side_panel.visible = false
-		side_panel_shown = false
-		side_panel_current_index = 0
-		
-func side_panel_init():
-	for child in side_panel_container.get_children():
-		if child is Button:
-			side_panel_buttons.append(child)
-	
-	print("инициализация: порядок кнопок = ", side_panel_buttons)
-	for i in range(side_panel_buttons.size()):
-		print("индекс ", i, ": ", side_panel_buttons[i].name)
-		
-	side_panel_current_index = 0
-	side_panel_button_hover.visible = true
-
-func side_panel_move_focus(direction: int):
-	if side_panel_buttons.is_empty():
-		return
-		
-	side_panel_current_index = (side_panel_current_index + direction) % side_panel_buttons.size()
-	if side_panel_current_index < 0:
-		side_panel_current_index += side_panel_buttons.size()
-	
-	side_panel_buttons[side_panel_current_index].grab_focus()
-	print("Кнопки: ", side_panel_buttons)
-	print("Индекс кнопки: ", side_panel_current_index)
-
-func side_panel_change_scene():
-	var current_scene = get_tree().current_scene
-	if side_panel_current_index == 1 and current_scene.name == "CoverFlow":
-		get_tree().change_scene_to_file("res://scenes/game_add.tscn")
 
 func refresh_games():
 	load_games()

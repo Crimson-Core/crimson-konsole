@@ -16,6 +16,10 @@ run/main_scene="uid://cmugoubnjxiu3"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="uid://bpx3hq3fbkh8d"
 
+[autoload]
+
+MusicPlayer="*res://scripts/nodes/MusicPlayer.gd"
+
 [display]
 
 window/size/viewport_width=1920

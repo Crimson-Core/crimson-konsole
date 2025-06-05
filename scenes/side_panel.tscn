@@ -11,22 +11,6 @@ bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o4m3c"]
 bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
 
-[sub_resource type="Animation" id="Animation_o4m3c"]
-resource_name = "show_panel"
-length = 0.15
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:position")
-tracks/0/interp = 2
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.15),
-"transitions": PackedFloat32Array(1, 0.329877),
-"update": 0,
-"values": [Vector2(-365, 137), Vector2(0, 137)]
-}
-
 [sub_resource type="Animation" id="Animation_waqlc"]
 length = 0.001
 tracks/0/type = "value"
@@ -56,6 +40,22 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1, 0.329877),
 "update": 0,
 "values": [Vector2(0, 137), Vector2(-365, 137)]
+}
+
+[sub_resource type="Animation" id="Animation_o4m3c"]
+resource_name = "show_panel"
+length = 0.15
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.15),
+"transitions": PackedFloat32Array(1, 0.329877),
+"update": 0,
+"values": [Vector2(-365, 137), Vector2(0, 137)]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_ad6hi"]
@@ -149,6 +149,7 @@ expand_mode = 1
 
 [node name="Hover" type="ColorRect" parent="VBoxContainer/GameAdd"]
 visible = false
+layout_mode = 0
 offset_right = 4.0
 offset_bottom = 75.0
 color = Color(0.854902, 0.286275, 0.286275, 1)
@@ -174,6 +175,7 @@ expand_mode = 1
 
 [node name="Hover" type="ColorRect" parent="VBoxContainer/Settings"]
 visible = false
+layout_mode = 0
 offset_right = 4.0
 offset_bottom = 75.0
 color = Color(0.854902, 0.286275, 0.286275, 1)
@@ -182,3 +184,9 @@ color = Color(0.854902, 0.286275, 0.286275, 1)
 libraries = {
 &"": SubResource("AnimationLibrary_ad6hi")
 }
+
+[node name="Dark" type="ColorRect" parent="."]
+visible = false
+modulate = Color(0, 0, 0, 0.564706)
+offset_right = 1920.0
+offset_bottom = 1080.0

@@ -1,8 +1,7 @@
-[gd_scene load_steps=21 format=3 uid="uid://cmugoubnjxiu3"]
+[gd_scene load_steps=20 format=3 uid="uid://cmugoubnjxiu3"]
 
 [ext_resource type="Script" uid="uid://frybfl02g8cs" path="res://scripts/CoverFlow.gd" id="1"]
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_1pbjt"]
-[ext_resource type="PackedScene" uid="uid://ddp74nsq1w4v7" path="res://scenes/side_panel.tscn" id="2_jdtcr"]
 [ext_resource type="Texture2D" uid="uid://dwuqa2jdp4o7f" path="res://assets/icons/settings.png" id="3_6hi8n"]
 [ext_resource type="Texture2D" uid="uid://s48w86ax45hu" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard.png" id="5_35aor"]
 [ext_resource type="Texture2D" uid="uid://biwdoaj2uat3f" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Default/keyboard_enter.png" id="6_6hi8n"]
@@ -102,13 +101,6 @@ transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="ViewportContainer/SubViewport"]
 environment = SubResource("Environment_1")
-
-[node name="Dark" type="ColorRect" parent="."]
-visible = false
-modulate = Color(0, 0, 0, 0.564706)
-layout_mode = 0
-offset_right = 1920.0
-offset_bottom = 1080.0
 
 [node name="TopLeftPanel" type="Control" parent="."]
 anchors_preset = 0
@@ -459,11 +451,3 @@ grow_vertical = 0
 theme_override_font_sizes/font_size = 24
 text = "Подключен контроллер"
 horizontal_alignment = 1
-
-[node name="SidePanel" parent="." instance=ExtResource("2_jdtcr")]
-visible = false
-layout_mode = 1
-offset_left = -12.5
-offset_top = 118.0
-offset_right = -1932.5
-offset_bottom = -271.0
