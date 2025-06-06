@@ -11,11 +11,6 @@ extends Control
 @onready var dpad_button = $Gamepad/Instruction/Navigation/Navigation
 @onready var start_button = $Gamepad/Add/Start
 @onready var controller_icon = $Gamepad/Controller/Icon
-#@onready var dark_node = $Dark
-#@onready var side_panel = $SidePanel
-#@onready var side_panel_animation = $SidePanel/AnimationPlayer
-#@onready var side_panel_container = $SidePanel/VBoxContainer
-#@onready var side_panel_button_hover = $SidePanel/VBoxContainer/Home/Hover
 
 var games: Array[GameLoader.GameData] = []
 var game_covers: Array[GameCover3D] = []
@@ -47,6 +42,7 @@ var last_device_id: int = -1
 func _ready():
 	add_child(notification)
 	add_child(side_panel)
+	add_child(side_panel.side_panel_instance)
 	
 	time_tracker = GameTimeTrackerClass.get_instance()
 	
@@ -241,13 +237,14 @@ func _input(event):
 			side_panel.show_panel()
 		else:
 			side_panel.hide_panel()
-	#elif event.is_action_pressed("skip_key"):
-		#musicplayer.next_track()
+	elif event.is_action_pressed("skip_key"):
+		get_tree().change_scene_to_file("res://scenes/game_add.tscn")
 
 func _trigger_vibration(weak_strength: float, strong_strength: float, duration_sec: float) -> void:
-	if last_device_id < 0:
+	if last_device_id < 0 or current_input_method == "keyboard":
 		return
-	Input.start_joy_vibration(last_device_id, weak_strength, strong_strength, duration_sec)
+	else:
+		Input.start_joy_vibration(last_device_id, weak_strength, strong_strength, duration_sec)
 
 
 func move_viewport_container(x: int, time: float):

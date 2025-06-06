@@ -15,15 +15,24 @@ var side_panel_instance = side_panel_scene.instantiate()
 @onready var side_panel_animation = side_panel_instance.get_node("AnimationPlayer")
 @onready var side_panel_container = side_panel_instance.get_node("VBoxContainer")
 @onready var side_panel_button_hover = side_panel_instance.get_node("VBoxContainer/Home/Hover")
+@onready var home_button = side_panel_instance.get_node("VBoxContainer/Home")
+@onready var gameadd_button = side_panel_instance.get_node("VBoxContainer/GameAdd")
+@onready var settings_button = side_panel_instance.get_node("VBoxContainer/Settings")
 
 func _ready():
 	side_panel_init()
+	home_button.pressed.connect(func(): side_panel_change_scene(home_button))
+	gameadd_button.pressed.connect(func(): side_panel_change_scene(gameadd_button))
+	settings_button.pressed.connect(func(): side_panel_change_scene(settings_button))
 
 func show_panel():
 	if side_panel_moving or side_panel_shown or side_panel_buttons.is_empty():
 		return
 	
+	var current_scene = get_tree().current_scene
+	
 	dark_node.visible = true
+	dark_node.mouse_filter = Control.MOUSE_FILTER_STOP
 	side_panel.visible = true
 	if side_panel_animation.has_animation("show_panel"):
 		side_panel_animation.play("show_panel")
@@ -31,7 +40,12 @@ func show_panel():
 		await side_panel_animation.animation_finished
 		side_panel_moving = false
 		side_panel_shown = true
-		side_panel_current_index = 0
+		if current_scene.name == "CoverFlow":
+			side_panel_current_index = 0
+		elif current_scene.name == "GameAdd":
+			side_panel_current_index = 1
+		elif current_scene.name == "Settings":
+			side_panel_current_index = 2
 		
 		# ПРИНУДИТЕЛЬНО устанавливаем фокус на первую кнопку
 		if side_panel_buttons.size() > 0:
@@ -55,11 +69,15 @@ func hide_panel():
 		await side_panel_animation.animation_finished
 		side_panel_moving = false
 		dark_node.visible = false
+		dark_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		side_panel.visible = false
 		side_panel_shown = false
 		side_panel_current_index = 0
 		
 func side_panel_init():
+	if side_panel_instance:
+		side_panel.position = Vector2(-365, 136.5)
+		
 	side_panel_buttons.clear()
 	
 	var vbox_container = side_panel_container
@@ -94,7 +112,6 @@ func side_panel_init():
 	
 	side_panel_current_index = 0
 	
-	
 func side_panel_move_focus(direction: int):
 	if side_panel_buttons.is_empty():
 		return
@@ -118,20 +135,32 @@ func side_panel_move_focus(direction: int):
 		side_panel_buttons[side_panel_current_index].grab_focus()
 		print("Фокус на кнопке: ", side_panel_buttons[side_panel_current_index].name)
 
-
-func side_panel_change_scene():
-	if side_panel_buttons.is_empty() or side_panel_current_index >= side_panel_buttons.size():
-		return
-	
-	var current_button = side_panel_buttons[side_panel_current_index]
+func side_panel_change_scene(button: Button = null):
 	var current_scene = get_tree().current_scene
-	
-	match current_button.name:
+	var button_name := ""
+
+	if button != null:
+		# Если пришла кнопка с UI (мышь), берём её имя
+		button_name = button.name
+	else:
+		# Иначе берём текущую по индексу (геймпад/клава)
+		if side_panel_current_index < side_panel_buttons.size():
+			button_name = side_panel_buttons[side_panel_current_index].name
+		else:
+			return # на всякий
+
+	match button_name:
 		"Home":
-			hide_panel()
+			if current_scene.name != "CoverFlow":
+				await hide_panel()
+				get_tree().change_scene_to_file("res://scenes/CoverFlow.tscn")
+			else:
+				hide_panel()
 		"GameAdd":
-			if current_scene.name == "CoverFlow":
+			if current_scene.name != "GameAdd":
+				await hide_panel()
 				get_tree().change_scene_to_file("res://scenes/GameAdd.tscn")
+			else:
+				hide_panel()
 		"Settings":
-			# Тут потом настройки
 			hide_panel()

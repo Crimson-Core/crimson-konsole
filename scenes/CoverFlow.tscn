@@ -1,8 +1,7 @@
-[gd_scene load_steps=20 format=3 uid="uid://cmugoubnjxiu3"]
+[gd_scene load_steps=18 format=3 uid="uid://cmugoubnjxiu3"]
 
 [ext_resource type="Script" uid="uid://frybfl02g8cs" path="res://scripts/CoverFlow.gd" id="1"]
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_1pbjt"]
-[ext_resource type="Texture2D" uid="uid://dwuqa2jdp4o7f" path="res://assets/icons/settings.png" id="3_6hi8n"]
 [ext_resource type="Texture2D" uid="uid://s48w86ax45hu" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard.png" id="5_35aor"]
 [ext_resource type="Texture2D" uid="uid://biwdoaj2uat3f" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Default/keyboard_enter.png" id="6_6hi8n"]
 [ext_resource type="Texture2D" uid="uid://dlxhgg7unex3f" path="res://assets/kenney_input-prompts_1.4/Xbox Series/Double/xbox_button_color_a.png" id="6_yspgm"]
@@ -41,8 +40,6 @@ background_energy_multiplier = 2.64
 ambient_light_source = 2
 ambient_light_color = Color(0.513726, 0.513726, 0.513726, 1)
 ambient_light_energy = 3.0
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6hi8n"]
 
 [node name="CoverFlow" type="Control"]
 layout_mode = 3
@@ -310,7 +307,6 @@ text = "Панель"
 horizontal_alignment = 1
 
 [node name="Gamepad" type="Control" parent="."]
-visible = false
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
@@ -383,29 +379,17 @@ offset_bottom = 40.0
 
 [node name="Panel" type="Panel" parent="Gamepad/Add"]
 layout_mode = 0
-offset_left = 1657.0
-offset_top = 171.0
-offset_right = 1865.0
-offset_bottom = 222.0
-
-[node name="Button" type="Button" parent="Gamepad/Add"]
-layout_mode = 0
-offset_left = 1712.0
-offset_top = 60.0
-offset_right = 1811.0
-offset_bottom = 157.0
-theme_override_styles/focus = SubResource("StyleBoxEmpty_6hi8n")
-button_mask = 0
-icon = ExtResource("3_6hi8n")
-icon_alignment = 1
-expand_icon = true
+offset_left = 857.0
+offset_top = 107.0
+offset_right = 1065.0
+offset_bottom = 158.0
 
 [node name="Start" type="TextureRect" parent="Gamepad/Add"]
 layout_mode = 0
-offset_left = 1660.0
-offset_top = 169.0
-offset_right = 1930.0
-offset_bottom = 445.0
+offset_left = 860.0
+offset_top = 105.0
+offset_right = 1130.0
+offset_bottom = 381.0
 scale = Vector2(0.2, 0.2)
 texture = ExtResource("11_8dok0")
 
@@ -414,13 +398,13 @@ layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 1721.0
-offset_top = 138.0
-offset_right = 1854.0
-offset_bottom = 172.0
+offset_left = 921.0
+offset_top = 74.0
+offset_right = 1054.0
+offset_bottom = 108.0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 24
-text = "Настройки"
+text = "Панель"
 horizontal_alignment = 1
 
 [node name="Controller" type="Control" parent="Gamepad"]

@@ -8,10 +8,10 @@
 [![Godot Engine](https://img.shields.io/badge/Godot-4.0+-478cbf?style=plastic&logo=godot-engine&logoColor=white)](https://godotengine.org/)
 [![GDScript](https://img.shields.io/badge/GDScript-478cbf?style=plastic&logo=godot-engine&logoColor=white)](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/index.html)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=plastic&logo=python&logoColor=white)](https://www.python.org/)
-[![License](https://img.shields.io/github/license/seriouslych/crimson?style=plastic)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/seriouslych/crimson?style=plastic&logo=github&logoColor=white)](https://github.com/seriouslych/crimson/stargazers)
-[![Issues](https://img.shields.io/github/issues/seriouslych/crimson?style=plastic&logo=github&logoColor=white)](https://github.com/seriouslych/crimson/issues)
-[![Last Commit](https://img.shields.io/github/last-commit/seriouslych/crimson?style=plastic&logo=github&logoColor=white)](https://github.com/seriouslych/crimson/commits)
+[![License](https://img.shields.io/github/license/Crimson-Core/crimson-konsole?style=plastic)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/Crimson-Core/crimson-konsole?style=plastic&logo=github&logoColor=white)](https://github.com/seriouslych/crimson/stargazers)
+[![Issues](https://img.shields.io/github/issues/Crimson-Core/crimson-konsole?style=plastic&logo=github&logoColor=white)](https://github.com/seriouslych/crimson/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/Crimson-Core/crimson-konsole?style=plastic&logo=github&logoColor=white)](https://github.com/seriouslych/crimson/commits)
 
 <!--
 ыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыыы| Дальше текст ломается
