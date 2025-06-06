@@ -118,6 +118,7 @@ size_flags_vertical = 3
 theme_override_fonts/font = ExtResource("1_o4m3c")
 theme_override_font_sizes/font_size = 32
 theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
+theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
 text = "Home"
 
 [node name="TextureRect" type="TextureRect" parent="VBoxContainer/Home"]
