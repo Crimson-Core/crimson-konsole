@@ -11,11 +11,6 @@ extends Control
 @onready var dpad_button = $Gamepad/Instruction/Navigation/Navigation
 @onready var start_button = $Gamepad/Add/Start
 @onready var controller_icon = $Gamepad/Controller/Icon
-#@onready var dark_node = $Dark
-#@onready var side_panel = $SidePanel
-#@onready var side_panel_animation = $SidePanel/AnimationPlayer
-#@onready var side_panel_container = $SidePanel/VBoxContainer
-#@onready var side_panel_button_hover = $SidePanel/VBoxContainer/Home/Hover
 
 var games: Array[GameLoader.GameData] = []
 var game_covers: Array[GameCover3D] = []
@@ -47,6 +42,7 @@ var last_device_id: int = -1
 func _ready():
 	add_child(notification)
 	add_child(side_panel)
+	add_child(side_panel.side_panel_instance)
 	
 	time_tracker = GameTimeTrackerClass.get_instance()
 	

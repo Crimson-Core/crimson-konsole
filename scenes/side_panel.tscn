@@ -77,6 +77,15 @@ grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(1.1, 1.1)
 
+[node name="Dark" type="ColorRect" parent="."]
+visible = false
+modulate = Color(0, 0, 0, 0.564706)
+layout_mode = 0
+offset_left = -712.727
+offset_top = -408.182
+offset_right = 2317.27
+offset_bottom = 1250.82
+
 [node name="Box" type="Control" parent="."]
 anchors_preset = 0
 offset_right = 40.0
@@ -184,9 +193,3 @@ color = Color(0.854902, 0.286275, 0.286275, 1)
 libraries = {
 &"": SubResource("AnimationLibrary_ad6hi")
 }
-
-[node name="Dark" type="ColorRect" parent="."]
-visible = false
-modulate = Color(0, 0, 0, 0.564706)
-offset_right = 1920.0
-offset_bottom = 1080.0
