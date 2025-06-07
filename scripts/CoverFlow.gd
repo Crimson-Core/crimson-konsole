@@ -21,12 +21,12 @@ var current_index: int = 0
 @export var side_angle_x: float = 0.0
 @export var side_offset: float = 2.0
 
-const NotificationLogicClass = preload("res://scripts/NotificationLogic.gd")
-var notification = NotificationLogicClass.new()
+# Получаем ссылку на уведомления из главной сцены
+var notification
 var notification_icon = load("res://logo.png")
 
-const SidePanelClass = preload("res://scripts/nodes/SidePanel.gd")
-var side_panel = SidePanelClass.new()
+#const SidePanelClass = preload("res://scripts/nodes/SidePanel.gd")
+#var side_panel = SidePanelClass.new()
 
 const GamepadTypeClass = preload("res://scripts/GamepadType.gd")
 var gamepadtype = GamepadTypeClass.new()
@@ -40,9 +40,19 @@ var current_input_method = "keyboard"
 var last_device_id: int = -1
 
 func _ready():
-	add_child(notification)
-	add_child(side_panel)
-	add_child(side_panel.side_panel_instance)
+	# Ищем уведомления в главной сцене
+	var main_scene = get_tree().get_first_node_in_group("main_scene")
+	if main_scene and main_scene.has_method("get_notification"):
+		notification = main_scene.get_notification()
+	else:
+		# Fallback - ищем в родительских узлах
+		var parent = get_parent()
+		while parent:
+			if parent.get("notification"):
+				notification = parent.notification
+				break
+			parent = parent.get_parent()
+
 	
 	time_tracker = GameTimeTrackerClass.get_instance()
 	
@@ -203,6 +213,9 @@ func _on_down_pressed():
 	update_display()
 
 func _input(event):
+	var main_scene = get_tree().get_first_node_in_group("main_scene")
+	var side_panel = main_scene.get_side_panel()
+	
 	if event is InputEventKey or event is InputEventMouseButton:
 		if current_input_method != "keyboard":
 			current_input_method = "keyboard"
@@ -238,14 +251,26 @@ func _input(event):
 		else:
 			side_panel.hide_panel()
 	elif event.is_action_pressed("skip_key"):
-		get_tree().change_scene_to_file("res://scenes/game_add.tscn")
+		# Используем систему сцен для перехода
+		get_main_scene().load_scene("res://scenes/game_add.tscn")
+
+func get_main_scene():
+	# Ищем главную сцену для смены сцен
+	var current = get_parent()
+	while current:
+		if current.has_method("load_scene"):
+			return current
+		current = current.get_parent()
+	
+	# Fallback - используем старый способ
+	get_tree().change_scene_to_file("res://scenes/game_add.tscn")
+	return null
 
 func _trigger_vibration(weak_strength: float, strong_strength: float, duration_sec: float) -> void:
 	if last_device_id < 0 or current_input_method == "keyboard":
 		return
 	else:
 		Input.start_joy_vibration(last_device_id, weak_strength, strong_strength, duration_sec)
-
 
 func move_viewport_container(x: int, time: float):
 	var tween := create_tween()
@@ -277,17 +302,20 @@ func launch_current_game():
 	var current_game = games[current_index]
 	
 	if not current_game.get("executable") or current_game.executable == "":
-		notification.show_notification("У игры не указан исполняемый файл!", notification_icon)
+		if notification:
+			notification.show_notification("У игры не указан исполняемый файл!", notification_icon)
 		return
 	
 	await get_tree().create_timer(1.0).timeout
 	
 	if launch_game_executable(current_game.executable):
-		notification.show_notification("Игра \"" + current_game.title + "\" запущена!", notification_icon)
+		if notification:
+			notification.show_notification("Игра \"" + current_game.title + "\" запущена!", notification_icon)
 
 func launch_game_executable(executable_path: String) -> bool:
 	if executable_path == "" or not FileAccess.file_exists(executable_path):
-		notification.show_notification("Исполняемый файл не найден!", notification_icon)
+		if notification:
+			notification.show_notification("Исполняемый файл не найден!", notification_icon)
 		return false
 	
 	var extension = executable_path.get_extension().to_lower()
@@ -307,7 +335,8 @@ func launch_game_executable(executable_path: String) -> bool:
 					command = "cmd"
 					arguments = ["/c", "cd /d \"" + working_directory + "\" && " + executable_path]
 				_:
-					notification.show_notification("Неподдерживаемый файл для Windows!", notification_icon)
+					if notification:
+						notification.show_notification("Неподдерживаемый файл для Windows!", notification_icon)
 					return false
 		
 		"Linux":
@@ -321,7 +350,8 @@ func launch_game_executable(executable_path: String) -> bool:
 						command = "sh"
 						arguments = ["-c", "cd \"" + working_directory + "\" && umu-run \"" + executable_path + "\""]
 					else:
-						notification.show_notification("Wine не установлен! Невозможно запустить .exe файлы", notification_icon)
+						if notification:
+							notification.show_notification("Wine не установлен! Невозможно запустить .exe файлы", notification_icon)
 						return false
 				"":
 					OS.execute("chmod", ["+x", executable_path])
@@ -332,7 +362,8 @@ func launch_game_executable(executable_path: String) -> bool:
 					command = "sh"
 					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
 				_:
-					notification.show_notification("Неподдерживаемый файл для Linux!", notification_icon)
+					if notification:
+						notification.show_notification("Неподдерживаемый файл для Linux!", notification_icon)
 					return false
 		
 		"macOS":
@@ -349,11 +380,13 @@ func launch_game_executable(executable_path: String) -> bool:
 					command = "sh"
 					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
 				_:
-					notification.show_notification("Неподдерживаемый файл для macOS!", notification_icon)
+					if notification:
+						notification.show_notification("Неподдерживаемый файл для macOS!", notification_icon)
 					return false
 		
 		_:
-			notification.show_notification("Неподдерживаемая операционная система!", notification_icon)
+			if notification:
+				notification.show_notification("Неподдерживаемая операционная система!", notification_icon)
 			return false
 	
 	var pid = OS.create_process(command, arguments, false)
