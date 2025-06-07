@@ -48,7 +48,7 @@ var style_special_keys:StyleBoxFlat = null
 	get:
 		return style_special_keys
 
-# НОВАЯ ГРУППА ДЛЯ КОНТРОЛЛЕРА
+# КОНТРОЛЛЕР
 @export_group("Controller")
 @export var enable_controller:bool = true
 @export var controller_focus_color:Color = Color(0.2, 0.5, 1.0, 0.8)
@@ -77,9 +77,10 @@ signal layout_changed
 ###########################
 
 var current_focused_key = null
-var focused_key_index = Vector2i(0, 0)  # row, column
-var keyboard_grid = []  # двумерный массив кнопок для навигации
-var original_key_styles = {}  # для сохранения оригинальных стилей
+var focused_key_index = Vector2i(0, 0)
+var keyboard_grid = []
+var original_key_styles = {}
+var controller_input_enabled = false # Флаг для активации управления контроллером
 
 ###########################
 ## PANEL 
@@ -92,7 +93,9 @@ func _enter_tree():
 
 func _input(event):
 	_update_auto_display_on_input(event)
-	if enable_controller and visible:
+	
+	# Обрабатываем контроллер только если клавиатура видима И включено управление контроллером
+	if enable_controller and visible and controller_input_enabled:
 		_handle_controller_input(event)
 
 func size_changed():
@@ -104,43 +107,47 @@ func size_changed():
 ###########################
 
 func _handle_controller_input(event):
-	if not event is InputEventKey and not event is InputEventJoypadButton:
+	# Обрабатываем только события джойстика
+	if not (event is InputEventJoypadButton):
 		return
 	
-	if not event.pressed:
+	if not event.pressed and event is InputEventJoypadButton:
 		return
 	
-	var action_pressed = false
+	var action_handled = false
 	
-	# Навигация
+	# Проверяем нажатие кнопок через Input.is_action_just_pressed
 	if Input.is_action_just_pressed(up_pad):
 		_navigate_up()
-		action_pressed = true
+		action_handled = true
 	elif Input.is_action_just_pressed(down_pad):
 		_navigate_down()
-		action_pressed = true
+		action_handled = true
 	elif Input.is_action_just_pressed(left_pad):
 		_navigate_left()
-		action_pressed = true
+		action_handled = true
 	elif Input.is_action_just_pressed(right_pad):
 		_navigate_right()
-		action_pressed = true
+		action_handled = true
 	elif Input.is_action_just_pressed(accept_pad):
 		_activate_focused_key()
-		action_pressed = true
+		action_handled = true
 	elif Input.is_action_just_pressed(back_pad):
 		_hide_keyboard()
-		action_pressed = true
+		action_handled = true
 	
-	# Поглощаем событие, если оно было обработано контроллером
-	if action_pressed:
+	# Поглощаем событие контроллера, чтобы оно не дошло до других элементов
+	if action_handled:
 		get_viewport().set_input_as_handled()
 
 func _navigate_up():
 	if keyboard_grid.is_empty():
 		return
+
+	var new_row = focused_key_index.x - 1
+	if new_row < 0:
+		new_row = keyboard_grid.size() - 1  # Переходим в конец
 	
-	var new_row = max(0, focused_key_index.x - 1)
 	var new_col = min(focused_key_index.y, keyboard_grid[new_row].size() - 1)
 	_set_focused_key(Vector2i(new_row, new_col))
 
@@ -148,7 +155,10 @@ func _navigate_down():
 	if keyboard_grid.is_empty():
 		return
 	
-	var new_row = min(keyboard_grid.size() - 1, focused_key_index.x + 1)
+	var new_row = focused_key_index.x + 1
+	if new_row >= keyboard_grid.size():
+		new_row = 0  # Переходим в начало
+	
 	var new_col = min(focused_key_index.y, keyboard_grid[new_row].size() - 1)
 	_set_focused_key(Vector2i(new_row, new_col))
 
@@ -157,7 +167,10 @@ func _navigate_left():
 		return
 	
 	var current_row = keyboard_grid[focused_key_index.x]
-	var new_col = max(0, focused_key_index.y - 1)
+	var new_col = focused_key_index.y - 1
+	if new_col < 0:
+		new_col = current_row.size() - 1  # Переходим в конец строки
+	
 	_set_focused_key(Vector2i(focused_key_index.x, new_col))
 
 func _navigate_right():
@@ -165,7 +178,10 @@ func _navigate_right():
 		return
 	
 	var current_row = keyboard_grid[focused_key_index.x]
-	var new_col = min(current_row.size() - 1, focused_key_index.y + 1)
+	var new_col = focused_key_index.y + 1
+	if new_col >= current_row.size():
+		new_col = 0  # Переходим в начало строки
+	
 	_set_focused_key(Vector2i(focused_key_index.x, new_col))
 
 func _set_focused_key(new_index: Vector2i):
@@ -185,7 +201,14 @@ func _apply_focus_style(key):
 	
 	# Сохраняем оригинальный стиль
 	if not original_key_styles.has(key):
-		original_key_styles[key] = key.get_theme_stylebox("normal")
+		var original_style = key.get_theme_stylebox("normal")
+		if original_style != null:
+			original_key_styles[key] = original_style
+		else:
+			# Создаем базовый стиль, если его нет
+			var base_style = StyleBoxFlat.new()
+			base_style.bg_color = Color(0.3, 0.3, 0.3)
+			original_key_styles[key] = base_style
 	
 	# Создаем новый стиль с подсветкой
 	var focused_style = StyleBoxFlat.new()
@@ -193,10 +216,10 @@ func _apply_focus_style(key):
 	
 	if original is StyleBoxFlat:
 		focused_style.bg_color = original.bg_color
-		focused_style.border_width_left = max(original.border_width_left, 2)
-		focused_style.border_width_right = max(original.border_width_right, 2)
-		focused_style.border_width_top = max(original.border_width_top, 2)
-		focused_style.border_width_bottom = max(original.border_width_bottom, 2)
+		focused_style.border_width_left = 3
+		focused_style.border_width_right = 3
+		focused_style.border_width_top = 3
+		focused_style.border_width_bottom = 3
 		focused_style.border_color = controller_focus_color
 		focused_style.corner_radius_top_left = original.corner_radius_top_left
 		focused_style.corner_radius_top_right = original.corner_radius_top_right
@@ -204,10 +227,10 @@ func _apply_focus_style(key):
 		focused_style.corner_radius_bottom_right = original.corner_radius_bottom_right
 	else:
 		focused_style.bg_color = Color(0.3, 0.3, 0.3)
-		focused_style.border_width_left = 2
-		focused_style.border_width_right = 2
-		focused_style.border_width_top = 2
-		focused_style.border_width_bottom = 2
+		focused_style.border_width_left = 3
+		focused_style.border_width_right = 3
+		focused_style.border_width_top = 3
+		focused_style.border_width_bottom = 3
 		focused_style.border_color = controller_focus_color
 	
 	key.add_theme_stylebox_override("normal", focused_style)
@@ -222,30 +245,48 @@ func _remove_focus_style(key):
 
 func _activate_focused_key():
 	if current_focused_key != null:
+		# Получаем данные ключа
+		var key_data = current_focused_key.get_meta("key_data", {})
+		
 		# Эмулируем нажатие кнопки
 		current_focused_key.pressed.emit()
+		
+		# Немного задержки для визуального эффекта
+		await get_tree().create_timer(0.1).timeout
 		current_focused_key.released.emit()
 
 func _build_keyboard_grid():
 	keyboard_grid.clear()
 	
 	if current_layout == null:
+		print("Нет активной раскладки для построения сетки")
 		return
 	
-	var vbox = current_layout.get_child(0)  # base_vbox
-	if vbox == null:
+	# Получаем контейнер с раскладкой
+	var layout_container = current_layout
+	if layout_container.get_child_count() == 0:
+		print("Нет дочерних элементов в раскладке")
 		return
 	
-	for i in range(vbox.get_child_count()):
-		var hbox = vbox.get_child(i)
+	var base_vbox = layout_container.get_child(0)
+	if not base_vbox is VBoxContainer:
+		print("Первый дочерний элемент не VBoxContainer")
+		return
+	
+	# Строим сетку по строкам
+	for i in range(base_vbox.get_child_count()):
+		var hbox = base_vbox.get_child(i)
 		if hbox is HBoxContainer:
 			var row = []
 			for j in range(hbox.get_child_count()):
 				var key = hbox.get_child(j)
-				if key.has_method("released"):  # проверяем, что это наша кнопка
+				# Проверяем, что это кнопка клавиатуры
+				if key.has_method("released") and key.has_method("pressed"):
 					row.append(key)
 			if not row.is_empty():
 				keyboard_grid.append(row)
+	
+	print("Построена сетка клавиатуры: ", keyboard_grid.size(), " строк")
 	
 	# Устанавливаем фокус на первую кнопку
 	if not keyboard_grid.is_empty() and not keyboard_grid[0].is_empty():
@@ -327,6 +368,13 @@ func _update_auto_display_on_input(event):
 					_hide_keyboard()
 
 func _hide_keyboard(key_data=null):
+	controller_input_enabled = false  # Отключаем управление контроллером
+	
+	# Убираем фокус при скрытии
+	if current_focused_key != null:
+		_remove_focus_style(current_focused_key)
+		current_focused_key = null
+	
 	if animate:
 		var new_y_pos = get_viewport().get_visible_rect().size.y + 10
 		animate_position(Vector2(position.x, new_y_pos), true)
@@ -335,12 +383,16 @@ func _hide_keyboard(key_data=null):
 
 func _show_keyboard(key_data=null):
 	change_visibility(true)
+	
 	if animate:
 		var new_y_pos = get_viewport().get_visible_rect().size.y - size.y
 		animate_position(Vector2(position.x, new_y_pos))
 	
-	# Обновляем сетку кнопок при показе клавиатуры
+	# Включаем управление контроллером и строим сетку
 	if enable_controller:
+		controller_input_enabled = true
+		# Даем немного времени на отрисовку, потом строим сетку
+		await get_tree().process_frame
 		_build_keyboard_grid()
 
 func animate_position(new_position, trigger_visibility:bool=false):
@@ -384,7 +436,8 @@ func _show_layout(layout):
 	layout.show()
 	current_layout = layout
 	# Перестраиваем сетку при смене раскладки
-	if enable_controller and visible:
+	if enable_controller and visible and controller_input_enabled:
+		await get_tree().process_frame
 		_build_keyboard_grid()
 
 func _hide_layout(layout):
@@ -524,6 +577,9 @@ func _create_keyboard(layout_data):
 
 			for key in row.get("keys"):
 				var new_key = KeyboardButton.new(key)
+				
+				# Сохраняем данные ключа в метаданных
+				new_key.set_meta("key_data", key)
 
 				_set_key_style("normal",new_key, style_normal)
 				_set_key_style("hover",new_key, style_hover)

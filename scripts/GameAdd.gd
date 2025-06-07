@@ -1,6 +1,7 @@
 extends Control
 
 @onready var file_dialog = $FileDialog
+@onready var onscreen_keyboard = $OnscreenKeyboard
 @onready var panel = $Panel
 @onready var executable_icon = $Panel/Executable/TextureRect
 
@@ -47,6 +48,9 @@ func _on_file_selected(path):
 func _input(event):
 	var main_scene = get_tree().get_first_node_in_group("main_scene")
 	var side_panel = main_scene.get_side_panel()
+
+	if onscreen_keyboard.visible and onscreen_keyboard.controller_input_enabled:
+		return
 
 	if event is InputEventKey or event is InputEventMouseButton:
 		if current_input_method != "keyboard":
