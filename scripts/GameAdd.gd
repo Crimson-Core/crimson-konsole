@@ -12,23 +12,25 @@ var notification = NotificationLogicClass.new()
 var notification_icon = load("res://logo.png")
 
 # Боковая панель
-const SidePanelClass = preload("res://scripts/nodes/SidePanel.gd")
-var side_panel = SidePanelClass.new()
+#const SidePanelClass = preload("res://scripts/nodes/SidePanel.gd")
+#var side_panel = SidePanelClass.new()
 
 func _ready():
 	add_child(notification)
 	
-	add_child(side_panel)
-	add_child(side_panel.side_panel_instance)
+	#add_child(side_panel)
+	#add_child(side_panel.side_panel_instance)
 
 func _on_fs_pressed() -> void:
-	file_dialog.file_selected.connect(_on_file_selected)
 	file_dialog.popup()
 
 func _on_file_selected():
 	pass
 
 func _input(event):
+	var main_scene = get_tree().get_first_node_in_group("main_scene")
+	var side_panel = main_scene.get_side_panel()
+
 	if event is InputEventKey or event is InputEventMouseButton:
 		if current_input_method != "keyboard":
 			current_input_method = "keyboard"

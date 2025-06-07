@@ -29,7 +29,8 @@ func show_panel():
 	if side_panel_moving or side_panel_shown or side_panel_buttons.is_empty():
 		return
 	
-	var current_scene = get_tree().current_scene
+	var main_scene = get_tree().get_first_node_in_group("main_scene")
+	var current_scene = main_scene.get_current_scene()
 	
 	dark_node.visible = true
 	dark_node.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -136,8 +137,9 @@ func side_panel_move_focus(direction: int):
 		print("Фокус на кнопке: ", side_panel_buttons[side_panel_current_index].name)
 
 func side_panel_change_scene(button: Button = null):
-	var current_scene = get_tree().current_scene
 	var button_name := ""
+	var main_scene = get_tree().get_first_node_in_group("main_scene")
+	var current_scene = main_scene.get_current_scene()
 
 	if button != null:
 		# Если пришла кнопка с UI (мышь), берём её имя
@@ -153,13 +155,13 @@ func side_panel_change_scene(button: Button = null):
 		"Home":
 			if current_scene.name != "CoverFlow":
 				await hide_panel()
-				get_tree().change_scene_to_file("res://scenes/CoverFlow.tscn")
+				main_scene.load_scene("res://scenes/CoverFlow.tscn")
 			else:
 				hide_panel()
 		"GameAdd":
 			if current_scene.name != "GameAdd":
 				await hide_panel()
-				get_tree().change_scene_to_file("res://scenes/GameAdd.tscn")
+				main_scene.load_scene("res://scenes/GameAdd.tscn")
 			else:
 				hide_panel()
 		"Settings":
