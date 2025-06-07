@@ -5,6 +5,7 @@ extends Control
 @onready var viewport_3d = $ViewportContainer/SubViewport
 @onready var camera_3d = $ViewportContainer/SubViewport/Camera3D
 @onready var game_title_label = $GameTitleLabel
+@onready var game_state_label = $GameTitleLabel/GameStateLabel
 @onready var keyboard_control = $Keyboard
 @onready var gamepad_control = $Gamepad
 @onready var a_button = $Gamepad/Instruction/Zapusk/Play
@@ -15,6 +16,7 @@ extends Control
 var games: Array[GameLoader.GameData] = []
 var game_covers: Array[GameCover3D] = []
 var current_index: int = 0
+var running_games := {}
 
 @export var cover_spacing: float = 6.0
 @export var side_angle_y: float = 35.0
@@ -176,6 +178,10 @@ func update_display():
 			rot = Vector3(-side_angle_x, side_angle_y, 0)
 			scl = Vector3(1.2, 1.2, 1.2)
 			cover.set_selected(true)
+			if running_games.has(games[i].title):
+				game_state_label.visible = true
+			else:
+				game_state_label.visible = false
 		else:
 			var abs_offset = abs(offset)
 			pos = Vector3(offset * abs_offset, offset * cover_spacing, abs_offset * 1.5)
@@ -300,6 +306,12 @@ func launch_current_game():
 			move_viewport_container(-465, 0.9)
 	
 	var current_game = games[current_index]
+	var title = current_game.title
+	
+	if running_games.has(title):
+		if notification:
+			notification.show_notification("Игра \"" + title + "\" уже запущена.", notification_icon)
+		return
 	
 	if not current_game.get("executable") or current_game.executable == "":
 		if notification:
@@ -308,11 +320,11 @@ func launch_current_game():
 	
 	await get_tree().create_timer(1.0).timeout
 	
-	if launch_game_executable(current_game.executable):
+	if launch_game_executable(current_game.executable, title):
 		if notification:
-			notification.show_notification("Игра \"" + current_game.title + "\" запущена!", notification_icon)
+			notification.show_notification("Игра \"" + title + "\" запущена!", notification_icon)
 
-func launch_game_executable(executable_path: String) -> bool:
+func launch_game_executable(executable_path: String, title: String) -> bool:
 	if executable_path == "" or not FileAccess.file_exists(executable_path):
 		if notification:
 			notification.show_notification("Исполняемый файл не найден!", notification_icon)
@@ -392,15 +404,15 @@ func launch_game_executable(executable_path: String) -> bool:
 	var pid = OS.create_process(command, arguments, false)
 	
 	if pid > 0:
-		var current_game = games[current_index]
-		time_tracker.start_tracking(current_game.title, pid)
+		time_tracker.start_tracking(title, pid)
 		print("Игра запущена с PID: ", pid, " - начинаем отслеживание времени")
 		
-		#musicplayer.pause_music()
+		running_games[title] = pid
 		
-		# Запускаем асинхронный мониторинг процесса
-		monitor_process(pid, current_game.title)
+		if games[current_index].title == title:
+			game_state_label.visible = true
 		
+		monitor_process(pid, title)
 		return true
 	else:
 		print("Ошибка запуска игры, PID: ", pid)
@@ -409,10 +421,12 @@ func launch_game_executable(executable_path: String) -> bool:
 func monitor_process(pid: int, game_title: String):
 	while OS.is_process_running(pid):
 		await get_tree().create_timer(1.0).timeout
-	time_tracker.stop_tracking()
+	time_tracker.stop_tracking(pid)
 	#musicplayer.resume_music()
 	print("Игра ", game_title, " с PID: ", pid, " завершена, трекинг остановлен")
-
+	running_games.erase(game_title)
+	update_display()
+		
 func is_wine_available() -> bool:
 	var output = []
 	var exit_code = OS.execute("which", ["umu-run"], output)

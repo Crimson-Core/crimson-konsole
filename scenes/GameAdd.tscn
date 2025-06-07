@@ -194,6 +194,7 @@ offset_left = 527.0
 offset_top = 528.0
 offset_right = 1392.0
 offset_bottom = 876.0
+theme_override_styles/panel = ExtResource("10_2ij0d")
 script = ExtResource("9_qgo40")
 separation = Vector2i(5, 5)
 background = ExtResource("10_2ij0d")
