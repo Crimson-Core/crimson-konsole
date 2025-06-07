@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://cmugoubnjxiu3"]
+[gd_scene load_steps=23 format=3 uid="uid://cmugoubnjxiu3"]
 
 [ext_resource type="Script" uid="uid://frybfl02g8cs" path="res://scripts/CoverFlow.gd" id="1"]
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_1pbjt"]
@@ -17,6 +17,8 @@
 [ext_resource type="Texture2D" uid="uid://jn3gipctg76m" path="res://assets/ui/crimson console.png" id="15_cp183"]
 [ext_resource type="Texture2D" uid="uid://bpx3hq3fbkh8d" path="res://logo.png" id="16_35aor"]
 [ext_resource type="Script" uid="uid://dwnrlwsqvoglg" path="res://scripts/nodes/TimeLabel.gd" id="17_35aor"]
+[ext_resource type="PackedScene" uid="uid://bbpinh7ylcblk" path="res://scenes/GameInfo.tscn" id="18_jdtcr"]
+[ext_resource type="Texture2D" uid="uid://cv5ge4s2uwhwi" path="res://assets/images/photo_2025-06-08_00-20-13.jpg" id="18_plh6l"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1pbjt"]
 shader = ExtResource("2_1pbjt")
@@ -473,3 +475,19 @@ theme_override_fonts/font = ExtResource("8_35aor")
 theme_override_font_sizes/font_size = 24
 text = "Подключен контроллер"
 horizontal_alignment = 1
+
+[node name="GameTemplate" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0.701961)
+layout_mode = 2
+offset_left = 227.0
+offset_top = 131.0
+offset_right = 626.0
+offset_bottom = 804.0
+texture = ExtResource("18_plh6l")
+
+[node name="GameInfo" parent="." instance=ExtResource("18_jdtcr")]
+layout_mode = 1
+offset_left = 1189.0
+offset_top = 177.0
+offset_right = -255.0
+offset_bottom = -253.0

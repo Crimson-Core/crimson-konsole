@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://bbpinh7ylcblk"]
+
+[ext_resource type="Texture2D" uid="uid://btf24cowua1uj" path="res://assets/ui/game_add/panel.png" id="1_eeaps"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_y4peb"]
+texture = ExtResource("1_eeaps")
+
+[node name="GameInfo" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -1444.0
+offset_bottom = -430.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 482.0
+offset_bottom = 654.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_y4peb")
