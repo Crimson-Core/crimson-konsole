@@ -1,6 +1,8 @@
 extends Control
 
 @onready var file_dialog = $FileDialog
+@onready var panel = $Panel
+@onready var executable_icon = $Panel/Executable/TextureRect
 
 # Ввод
 var current_input_method = "keyboard"
@@ -22,10 +24,25 @@ func _ready():
 	#add_child(side_panel.side_panel_instance)
 
 func _on_fs_pressed() -> void:
+	if OS.get_name() == "Windows":
+		file_dialog.add_filter("*.exe", "Windows Executable")
+		file_dialog.add_filter("*.bat", "Batch Files")
+		file_dialog.add_filter("*.cmd", "Command Files")
+	elif OS.get_name() == "Linux":
+		file_dialog.add_filter("*.sh", "Shell Scripts")
+		file_dialog.add_filter("*.exe", "Windows Executable (Wine)")
+		file_dialog.add_filter("*.x86_64", "x86 64 Bit Executable")
+		file_dialog.add_filter("*", "All Files")
+	elif OS.get_name() == "macOS":
+		file_dialog.add_filter("*.app", "macOS Applications")
+		file_dialog.add_filter("*.sh", "Shell Scripts")
+		file_dialog.add_filter("*", "All Files")
+	else:
+		file_dialog.add_filter("*", "All Files")
 	file_dialog.popup()
 
-func _on_file_selected():
-	pass
+func _on_file_selected(path):
+	executable_icon.texture = load("res://assets/icons/check.png")
 
 func _input(event):
 	var main_scene = get_tree().get_first_node_in_group("main_scene")

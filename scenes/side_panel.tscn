@@ -108,6 +108,7 @@ offset_bottom = 686.0
 color = Color(0.156863, 0.156863, 0.156863, 1)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
+z_index = 100
 layout_mode = 0
 offset_top = 110.0
 offset_right = 328.0
@@ -175,11 +176,11 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
 text = "Settings"
 
 [node name="TextureRect" type="TextureRect" parent="VBoxContainer/Settings"]
-layout_mode = 2
-offset_left = 19.0909
-offset_top = 10.8182
-offset_right = 82.0909
-offset_bottom = 70.8182
+layout_mode = 0
+offset_left = 19.0
+offset_top = 7.72726
+offset_right = 83.0
+offset_bottom = 71.7273
 scale = Vector2(0.969954, 0.969954)
 texture = ExtResource("4_ad6hi")
 expand_mode = 1

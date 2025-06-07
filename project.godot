@@ -28,13 +28,9 @@ window/size/mode=4
 window/size/resizable=false
 window/stretch/mode="viewport"
 
-[editor]
-
-version_control/autoload_on_startup=true
-
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/fancy_editor_sounds/plugin.cfg")
+enabled=PackedStringArray("res://addons/fancy_editor_sounds/plugin.cfg", "res://addons/onscreenkeyboard/plugin.cfg")
 
 [input]
 

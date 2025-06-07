@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://m8nha0xnac7y"]
+[gd_scene load_steps=20 format=3 uid="uid://m8nha0xnac7y"]
 
 [ext_resource type="Script" uid="uid://bq5fqq12ljivu" path="res://scripts/GameAdd.gd" id="1_jlcgv"]
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_mct5f"]
@@ -8,6 +8,12 @@
 [ext_resource type="Texture2D" uid="uid://btf24cowua1uj" path="res://assets/ui/game_add/panel.png" id="6_accbs"]
 [ext_resource type="FontFile" uid="uid://bl33m6ku6ffwm" path="res://assets/fonts/Jost/Jost-VariableFont_wght.ttf" id="7_8e8ny"]
 [ext_resource type="Texture2D" uid="uid://vckwtjp05t7f" path="res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png" id="8_qgo40"]
+[ext_resource type="Script" uid="uid://dffrfqfrco1ds" path="res://addons/onscreenkeyboard/onscreen_keyboard.gd" id="9_qgo40"]
+[ext_resource type="StyleBox" path="res://addons/onscreenkeyboard/customize/styles/defaultBackgroundStyle.tres" id="10_2ij0d"]
+[ext_resource type="StyleBox" path="res://addons/onscreenkeyboard/customize/styles/defaultNormalStyle.tres" id="11_ama77"]
+[ext_resource type="StyleBox" path="res://addons/onscreenkeyboard/customize/styles/defaultHoverStlyle.tres" id="11_fhx61"]
+[ext_resource type="StyleBox" path="res://addons/onscreenkeyboard/customize/styles/defaultPressedStyle.tres" id="12_ama77"]
+[ext_resource type="StyleBox" path="res://addons/onscreenkeyboard/customize/styles/defaultNormalSpecialKeysStyle.tres" id="13_qumfr"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_p1mop"]
 shader = ExtResource("2_mct5f")
@@ -34,6 +40,9 @@ bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cbh8o"]
 bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8e8ny"]
+bg_color = Color(0.854902, 0.286275, 0.286275, 0.623529)
 
 [node name="GameAdd" type="Control"]
 layout_mode = 3
@@ -100,7 +109,7 @@ texture = ExtResource("5_8ocm4")
 expand_mode = 1
 stretch_mode = 4
 
-[node name="Panel2" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="."]
 layout_mode = 0
 offset_left = 668.0
 offset_top = 82.0
@@ -108,7 +117,7 @@ offset_right = 1257.0
 offset_bottom = 815.0
 theme_override_styles/panel = SubResource("StyleBoxTexture_8ocm4")
 
-[node name="Executable" type="Button" parent="Panel2"]
+[node name="Executable" type="Button" parent="Panel"]
 layout_mode = 0
 offset_left = 126.0
 offset_top = 225.0
@@ -122,7 +131,7 @@ theme_override_styles/focus = SubResource("StyleBoxFlat_52518")
 theme_override_styles/hover = SubResource("StyleBoxFlat_cbh8o")
 text = "Executable"
 
-[node name="TextureRect" type="TextureRect" parent="Panel2/Executable"]
+[node name="TextureRect" type="TextureRect" parent="Panel/Executable"]
 layout_mode = 2
 offset_left = 19.0
 offset_top = 5.0
@@ -131,6 +140,21 @@ offset_bottom = 69.0
 scale = Vector2(0.969954, 0.969954)
 texture = ExtResource("8_qgo40")
 expand_mode = 1
+
+[node name="LineEdit" type="LineEdit" parent="Panel"]
+layout_mode = 0
+offset_left = 126.0
+offset_top = 83.0
+offset_right = 470.0
+offset_bottom = 154.0
+theme_override_colors/selection_color = Color(0.854902, 0.286275, 0.286275, 1)
+theme_override_colors/caret_color = Color(0.854902, 0.286275, 0.286275, 1)
+theme_override_fonts/font = ExtResource("7_8e8ny")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_8e8ny")
+placeholder_text = "Game name..."
+alignment = 1
+caret_blink = true
 
 [node name="BottomPanel" type="Panel" parent="."]
 layout_mode = 0
@@ -163,5 +187,22 @@ file_mode = 0
 access = 2
 use_native_dialog = true
 
-[connection signal="pressed" from="Panel2/Executable" to="." method="_on_fs_pressed"]
+[node name="OnscreenKeyboard" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 2
+offset_left = 527.0
+offset_top = 528.0
+offset_right = 1392.0
+offset_bottom = 876.0
+script = ExtResource("9_qgo40")
+separation = Vector2i(5, 5)
+background = ExtResource("10_2ij0d")
+normal = ExtResource("11_ama77")
+hover = ExtResource("11_fhx61")
+pressed = ExtResource("12_ama77")
+special_keys = ExtResource("13_qumfr")
+font = ExtResource("7_8e8ny")
+metadata/_custom_type_script = "uid://dffrfqfrco1ds"
+
+[connection signal="pressed" from="Panel/Executable" to="." method="_on_fs_pressed"]
 [connection signal="file_selected" from="FileDialog" to="." method="_on_file_selected"]
