@@ -58,6 +58,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
+steam_api_key = "B2AEAA667BF52DF7599F80F95FF0106A"
 
 [node name="ViewportContainer" type="SubViewportContainer" parent="."]
 layout_mode = 1
@@ -477,6 +478,7 @@ text = "Подключен контроллер"
 horizontal_alignment = 1
 
 [node name="GameTemplate" type="TextureRect" parent="."]
+visible = false
 modulate = Color(1, 1, 1, 0.701961)
 layout_mode = 2
 offset_left = 227.0
@@ -486,6 +488,7 @@ offset_bottom = 804.0
 texture = ExtResource("18_plh6l")
 
 [node name="GameInfo" parent="." instance=ExtResource("18_jdtcr")]
+visible = false
 layout_mode = 1
 offset_left = 1189.0
 offset_top = 177.0
