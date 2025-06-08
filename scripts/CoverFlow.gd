@@ -16,7 +16,7 @@ extends Control
 var games: Array[GameLoader.GameData] = []
 var game_covers: Array[GameCover3D] = []
 var current_index: int = 0
-var running_games := {}
+var running_games := {} # title -> {"pid": int}
 
 @export var cover_spacing: float = 6.0
 @export var side_angle_y: float = 35.0
@@ -36,23 +36,17 @@ const SteamAPIClass = preload("res://scripts/SteamAPI.gd")
 var steam_api: SteamAPI
 @export var steam_api_key: String = ""
 
-var game_cover_scene: PackedScene
 var first_update: bool = true
 var current_input_method = "keyboard"
 var last_device_id: int = -1
 
 func _ready():
-	# Инициализация
 	find_notification()
 	time_tracker = GameTimeTrackerClass.get_instance()
 	
-	# Инициализация Steam API
+	# Steam API (оставляем только инициализацию)
 	steam_api = SteamAPIClass.new(steam_api_key)
 	steam_api.setup_http_request(self)
-	
-	# Подключение сигналов Steam API
-	steam_api.steam_launch_success.connect(_on_steam_launch_success)
-	steam_api.steam_launch_failed.connect(_on_steam_launch_failed)
 	
 	load_games()
 	setup_keyboard_ui()
@@ -152,13 +146,7 @@ func setup_coverflow():
 		return
 	
 	for i in range(games.size()):
-		var cover_instance: GameCover3D
-		
-		if game_cover_scene:
-			cover_instance = game_cover_scene.instantiate()
-		else:
-			cover_instance = GameCover3D.new()
-		
+		var cover_instance: GameCover3D = GameCover3D.new()
 		cover_instance.set_game_data(games[i])
 		viewport_3d.add_child(cover_instance)
 		game_covers.append(cover_instance)
@@ -201,7 +189,7 @@ func update_display():
 			cover.set_target_transform(pos, rot, scl)
 	
 	first_update = false
-
+	
 func _on_up_pressed():
 	if games.size() <= 1:
 		return
@@ -254,7 +242,7 @@ func _input(event):
 		if side_panel.side_panel_shown:
 			side_panel.side_panel_change_scene()
 		else:
-			launch_current_game()
+			launch_game()
 	elif event.is_action_pressed("menu_key") or event.is_action_pressed("menu_pad"):
 		if not side_panel.side_panel_shown:
 			side_panel.show_panel()
@@ -274,9 +262,7 @@ func get_main_scene():
 	return null
 
 func _trigger_vibration(weak_strength: float, strong_strength: float, duration_sec: float) -> void:
-	if last_device_id < 0 or current_input_method == "keyboard":
-		return
-	else:
+	if last_device_id >= 0 and current_input_method == "gamepad":
 		Input.start_joy_vibration(last_device_id, weak_strength, strong_strength, duration_sec)
 
 func move_viewport_container(x: int, time: float):
@@ -284,189 +270,110 @@ func move_viewport_container(x: int, time: float):
 	tween.tween_property(viewport_container, "position:x", x, time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
 
-func game_info():
+# ПРОСТАЯ ФУНКЦИЯ ЗАПУСКА ИГРЫ
+func launch_game():
 	if games.is_empty():
 		return
 	
-	var current_game = games[current_index]
+	var game = games[current_index]
+	var title = game.title
 	
-	if current_index < game_covers.size():
-		var current_cover = game_covers[current_index]
-		if is_instance_valid(current_cover):
-			current_cover.start_fast_spin_move_animation()
-			move_viewport_container(10, 0.9)
-
-# УПРОЩЁННЫЙ ЗАПУСК ИГР ЧЕРЕЗ STEAM API
-func launch_current_game():
-	if games.is_empty():
-		return
-	
-	var current_game = games[current_index]
-	var title = current_game.title
-	
-	# Проверяем, не запущена ли уже игра
+	# Проверяем, не запущена ли уже
 	if running_games.has(title):
 		show_notification("Игра \"" + title + "\" уже запущена.")
 		return
 	
-	# Анимация запуска
+	# Анимация
 	if current_index < game_covers.size():
-		var current_cover = game_covers[current_index]
-		if is_instance_valid(current_cover):
-			current_cover.stop_fast_spin_move_animation()
-			move_viewport_container(-465, 0.9)
+		var cover = game_covers[current_index]
+		if is_instance_valid(cover) and cover.has_method("stop_fast_spin_move_animation"):
+			cover.stop_fast_spin_move_animation()
+		move_viewport_container(-465, 0.9)
 	
 	await get_tree().create_timer(1.0).timeout
 	
-	# Определяем тип игры и запускаем
-	var exe_path = current_game.get("executable")
-	
-	if is_steam_game(exe_path):
-		launch_steam_game(current_game)
-	else:
-		launch_regular_game(current_game)
-
-func is_steam_game(exe_path: String) -> bool:
-	if exe_path == "":
-		return false
-	
-	var lower_path = exe_path.to_lower()
-	return exe_path.begins_with("steam://") or ("steam" in lower_path and "steamapps" in lower_path)
-
-func launch_steam_game(game_data: GameLoader.GameData):
-	var exe_path = game_data.get("executable")
-	
-	# Если это прямая ссылка Steam
-	if exe_path.begins_with("steam://rungameid/"):
-		var app_id = exe_path.split("/")[-1].to_int()
-		steam_api.launch_steam_game(app_id)
-	elif exe_path.begins_with("steam://"):
-		# Другие Steam ссылки
-		OS.shell_open(exe_path)
-		handle_steam_launch_success(0, game_data.title)
-	else:
-		# Поиск по названию через Steam API
-		steam_api.launch_steam_game_by_name(game_data.title)
-
-func launch_regular_game(game_data: GameLoader.GameData):
-	var exe_path = game_data.get("executable")
-	
-	if exe_path == "":
+	var exe_path = game.get("executable")
+	if exe_path.is_empty():
 		show_notification("У игры не указан исполняемый файл!")
 		return
 	
+	# Проверяем существование файла
 	if not FileAccess.file_exists(exe_path):
 		show_notification("Исполняемый файл не найден!")
 		return
 	
-	var pid = launch_executable(exe_path)
+	# Запускаем игру
+	var pid = _execute_game(exe_path)
 	if pid > 0:
-		handle_game_launch_success(pid, game_data.title)
+		_start_monitoring(title, pid)
+		show_notification("Игра \"" + title + "\" запущена!")
 	else:
 		show_notification("Не удалось запустить игру!")
 
-func launch_executable(exe_path: String) -> int:
+func _execute_game(exe_path: String) -> int:
 	var working_dir = exe_path.get_base_dir()
 	var os_name = OS.get_name()
 	
 	match os_name:
 		"Windows":
-			return OS.create_process("cmd", ["/c", "cd /d \"" + working_dir + "\" && \"" + exe_path + "\""], false)
+			return OS.create_process("cmd", ["/c", "cd /d \"" + working_dir + "\" && \"" + exe_path + "\""])
 		
 		"Linux":
 			OS.execute("chmod", ["+x", exe_path])
 			
-			# Обработка Windows исполняемых файлов
 			if exe_path.get_extension().to_lower() == "exe":
-				# Проверка наличия umu-run
-				if OS.execute("which", ["umu-run"]) == OK:
-					return OS.create_process("umu-run", [exe_path], false)
-				
-				# Проверка наличия wine
-				if OS.execute("which", ["wine"]) == OK:
-					return OS.create_process("wine", [exe_path], false)
-				
-				show_notification("Для запуска .exe нужен wine или umu-run!")
-				return -1
+				# Windows exe в Linux
+				if OS.execute("which", ["umu-run"]) == 0:
+					return OS.create_process("umu-run", [exe_path])
+				elif OS.execute("which", ["wine"]) == 0:
+					return OS.create_process("wine", [exe_path])
+				else:
+					show_notification("Для .exe нужен wine или umu-run!")
+					return -1
 			
-			# Обычный запуск Linux-совместимых бинарников
-			return OS.create_process("sh", ["-c", "cd \"" + working_dir + "\" && ./" + exe_path.get_file()], false)
+			return OS.create_process("sh", ["-c", "cd \"" + working_dir + "\" && ./" + exe_path.get_file()])
 		
 		"macOS":
 			if exe_path.get_extension().to_lower() == "app":
-				return OS.create_process("open", [exe_path], false)
+				return OS.create_process("open", [exe_path])
 			else:
 				OS.execute("chmod", ["+x", exe_path])
-				return OS.create_process("sh", ["-c", "cd \"" + working_dir + "\" && ./" + exe_path.get_file()], false)
+				return OS.create_process("sh", ["-c", "cd \"" + working_dir + "\" && ./" + exe_path.get_file()])
 		
 		_:
 			return -1
 
-# Обработчики сигналов Steam API
-func _on_steam_launch_success(app_id: int):
-	var current_game = games[current_index]
-	handle_steam_launch_success(app_id, current_game.title)
-
-func _on_steam_launch_failed(error: String):
-	show_notification("Ошибка запуска Steam игры: " + error)
-
-# Обработчики успешного запуска
-func handle_steam_launch_success(app_id: int, title: String):
-	running_games[title] = app_id
-	time_tracker.start_tracking(title, app_id)
-	update_display()
-	show_notification("Игра \"" + title + "\" запущена через Steam!")
-	
-	# Простой мониторинг для Steam игр
-	monitor_steam_game(title, app_id)
-
-func handle_game_launch_success(pid: int, title: String):
-	running_games[title] = pid
+# МОНИТОРИНГ ПРОЦЕССОВ
+func _start_monitoring(title: String, pid: int):
+	running_games[title] = {"pid": pid}
 	time_tracker.start_tracking(title, pid)
 	update_display()
-	show_notification("Игра \"" + title + "\" запущена!")
-	
-	# Мониторинг обычных игр
-	monitor_regular_game(title, pid)
+	_monitor_game(title)
 
-# Упрощённый мониторинг
-func monitor_steam_game(title: String, app_id: int):
-	# Для Steam игр используем простую задержку
-	await get_tree().create_timer(10.0).timeout
+func _monitor_game(title: String):
+	var game_info = running_games[title]
+	
+	await get_tree().create_timer(3.0).timeout
 	
 	while running_games.has(title):
-		await get_tree().create_timer(5.0).timeout
-		# Простая проверка - если прошло достаточно времени, считаем что игра может быть закрыта
-		# В реальной реализации здесь должна быть проверка через Steam API или процессы
-
-func monitor_regular_game(title: String, pid: int):
-	while running_games.has(title):
-		await get_tree().create_timer(3.0).timeout
-		
-		if not OS.is_process_running(pid):
-			stop_game_tracking(title)
+		if not OS.is_process_running(game_info.pid):
+			_stop_game(title)
 			break
+		
+		await get_tree().create_timer(5.0).timeout
 
-func stop_game_tracking(title: String):
+func _stop_game(title: String):
 	if running_games.has(title):
-		var pid_or_app_id = running_games[title]
-		time_tracker.stop_tracking(pid_or_app_id)
+		var game_info = running_games[title]
+		time_tracker.stop_tracking(game_info.pid)
 		running_games.erase(title)
 		update_display()
 		show_notification("Игра \"" + title + "\" завершена.")
-		print("Игра ", title, " завершена")
 		game_state_label.visible = false
 
 func show_notification(message: String):
 	if notification:
 		notification.show_notification(message, notification_icon)
-
-func _notification(what: int) -> void:
-	match what:
-		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
-			set_process_input(false)
-		NOTIFICATION_WM_WINDOW_FOCUS_IN:
-			set_process_input(true)
 
 func refresh_games():
 	load_games()
@@ -474,3 +381,10 @@ func refresh_games():
 		current_index = max(0, games.size() - 1)
 	setup_coverflow()
 	update_display()
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+			set_process_input(false)
+		NOTIFICATION_WM_WINDOW_FOCUS_IN:
+			set_process_input(true)
