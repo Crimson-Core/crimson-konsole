@@ -60,7 +60,6 @@ func _ready():
 
 func set_box_type(type: BoxType):
 	box_type = type
-	print("Меняем тип коробки на: ", "Xbox" if type == BoxType.XBOX else "PC")
 	if model_node:
 		model_node.queue_free()
 		model_node = null
@@ -76,8 +75,7 @@ func load_model():
 			model_path = "res://models/game_case_pc.glb"
 		_:
 			model_path = "res://models/game_case.glb"
-	
-	print("Загружаем модель: ", model_path)
+			
 	var model_scene = load(model_path)
 	if model_scene:
 		model_node = model_scene.instantiate()
@@ -85,7 +83,7 @@ func load_model():
 		add_child(model_node)
 		mesh_instance = find_mesh_instance(model_node)
 		if mesh_instance:
-			print("MeshInstance3D найден, поверхностей: ", mesh_instance.mesh.get_surface_count())
+			pass
 		else:
 			print("MeshInstance3D не найден, создаем fallback")
 			create_fallback_mesh()
@@ -134,15 +132,12 @@ func setup_materials():
 
 func set_game_data(data: GameLoader.GameData):
 	game_data = data
-	print("установлены данные игры: ", game_data.title)
-	print("пути: front=", game_data.front, ", back=", game_data.back, ", spine=", game_data.spine, ", box_type=", game_data.box_type)
 	match game_data.box_type.to_lower():
 		"xbox":
 			set_box_type(BoxType.XBOX)
 		"pc":
 			set_box_type(BoxType.PC)
 		_:
-			print("неизвестный тип коробки: ", game_data.box_type, ", fallback на Xbox")
 			set_box_type(BoxType.XBOX)
 	if mesh_instance:
 		load_textures()
@@ -151,13 +146,11 @@ func load_textures():
 	if not game_data or not mesh_instance:
 		print("Нет данных игры или mesh_instance")
 		return
-	print("Загрузка текстур для: ", game_data.title)
 	if game_data.front != "" and FileAccess.file_exists(game_data.front):
 		var front_texture = GameLoader.load_texture_from_path(game_data.front)
 		if front_texture:
 			front_material.albedo_texture = front_texture
 			front_material.albedo_color = Color.WHITE
-			print("Передняя текстура загружена: ", game_data.front)
 	if game_data.back != "" and FileAccess.file_exists(game_data.back):
 		var back_texture = GameLoader.load_texture_from_path(game_data.back)
 		if back_texture:
@@ -175,7 +168,6 @@ func apply_materials_to_mesh():
 		print("Нет mesh_instance или mesh")
 		return
 	var surface_count = mesh_instance.mesh.get_surface_count()
-	print("Применение материалов, поверхностей: ", surface_count)
 	for i in range(surface_count):
 		var material: StandardMaterial3D
 		match i:

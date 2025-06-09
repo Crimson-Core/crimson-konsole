@@ -99,7 +99,7 @@ func set_audio_volume(volume: float):
 		print("audio_player не инициализирован, хз что делать")
 
 func on_fade_in_complete():
-	print("появление звука завершено")
+	pass
 
 func next_track():
 	current_track_index += 1
@@ -130,7 +130,6 @@ func pause_music():
 		tween.tween_method(set_audio_volume, audio_player.volume_db, -50.0, fade_pause_duration)
 		tween.tween_callback(func(): 
 			audio_player.stream_paused = true
-			print("музыка на паузе после фейда")
 		)
 
 func resume_music():
@@ -142,10 +141,7 @@ func resume_music():
 		tween.set_ease(Tween.EASE_IN)
 		tween.set_trans(Tween.TRANS_CUBIC)
 		tween.tween_method(set_audio_volume, audio_player.volume_db, target_volume, fade_pause_duration)
-		tween.tween_callback(func(): 
-			print("музыка снова играет после фейда")
-		)
-
+		
 func set_volume(volume_db: float):
 	target_volume = volume_db
 	if audio_player and (not tween or not tween.is_valid()):

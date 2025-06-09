@@ -54,7 +54,6 @@ func show_panel():
 			side_panel_buttons[side_panel_current_index].focus_mode = Control.FOCUS_ALL
 			# Затем устанавливаем фокус
 			side_panel_buttons[side_panel_current_index].grab_focus()
-			print("Принудительно установлен фокус на: ", side_panel_buttons[side_panel_current_index].name)
 			
 func hide_panel():
 	if side_panel_moving or not side_panel_shown:
@@ -95,21 +94,15 @@ func side_panel_init():
 		side_panel_buttons.append(home_btn)
 		# ОТКЛЮЧАЕМ автофокус
 		home_btn.focus_mode = Control.FOCUS_NONE
-		print("Добавлена кнопка Home")
 	if gameadd_btn and gameadd_btn is Button:
 		side_panel_buttons.append(gameadd_btn)
 		# ОТКЛЮЧАЕМ автофокус
 		gameadd_btn.focus_mode = Control.FOCUS_NONE
-		print("Добавлена кнопка GameAdd")
 	if settings_btn and settings_btn is Button:
 		side_panel_buttons.append(settings_btn)
 		# ОТКЛЮЧАЕМ автофокус
 		settings_btn.focus_mode = Control.FOCUS_NONE
-		print("Добавлена кнопка Settings")
 	
-	print("=== ИТОГО: порядок кнопок ===")
-	for i in range(side_panel_buttons.size()):
-		print("Индекс ", i, ": ", side_panel_buttons[i].name)
 	
 	side_panel_current_index = 0
 	
@@ -134,7 +127,6 @@ func side_panel_move_focus(direction: int):
 	if side_panel_current_index < side_panel_buttons.size():
 		side_panel_buttons[side_panel_current_index].focus_mode = Control.FOCUS_ALL
 		side_panel_buttons[side_panel_current_index].grab_focus()
-		print("Фокус на кнопке: ", side_panel_buttons[side_panel_current_index].name)
 
 func side_panel_change_scene(button: Button = null):
 	var button_name := ""

@@ -31,7 +31,6 @@ static func load_all_games() -> Array[GameData]:
 	var games: Array[GameData] = []
 	var games_dir = "user://games/"
 	
-	print("Поиск игр в директории: ", games_dir)
 	
 	if not DirAccess.dir_exists_absolute(games_dir):
 		print("Директория games не найдена, создаем...")
@@ -45,7 +44,6 @@ static func load_all_games() -> Array[GameData]:
 		
 		while file_name != "":
 			if file_name.ends_with(".json"):
-				print("Найден файл игры: ", file_name)
 				var game_data = load_game_data(games_dir + file_name)
 				if game_data:
 					games.append(game_data)
@@ -61,7 +59,6 @@ static func load_all_games() -> Array[GameData]:
 
 # Загрузить данные конкретной игры
 static func load_game_data(file_path: String) -> GameData:
-	print("Загрузка данных игры из: ", file_path)
 	
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if not file:
@@ -88,11 +85,6 @@ static func load_game_data(file_path: String) -> GameData:
 		return null
 	
 	var game_data = GameData.new(data)
-	print("Данные игры загружены: ", game_data.title)
-	print("  Передняя: ", game_data.front)
-	print("  Задняя: ", game_data.back)
-	print("  Корешок: ", game_data.spine)
-	print("  Тип коробки: ", game_data.box_type)
 	
 	return game_data
 
@@ -101,9 +93,7 @@ static func load_texture_from_path(path: String) -> Texture2D:
 	if path == "":
 		print("Пустой путь к текстуре")
 		return null
-	
-	print("Попытка загрузки текстуры: ", path)
-	
+		
 	if not FileAccess.file_exists(path):
 		print("Файл текстуры не существует: ", path)
 		return null
@@ -115,12 +105,10 @@ static func load_texture_from_path(path: String) -> Texture2D:
 		print("Ошибка загрузки изображения ", path, ": ", error)
 		return null
 	
-	print("Изображение загружено, размер: ", image.get_width(), "x", image.get_height())
 	
 	var texture = ImageTexture.new()
 	texture.set_image(image)
 	
-	print("Текстура создана успешно")
 	return texture
 
 # Проверить существование файла текстуры

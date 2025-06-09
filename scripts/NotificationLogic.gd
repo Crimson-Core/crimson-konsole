@@ -2,15 +2,27 @@ class_name NotificationLogic
 extends Node
 
 const NOTIFICATION_SCENE_PATH = "res://scenes/notification.tscn"
-
 var is_showing_notification := false
+var notification_queue := []
 
 func show_notification(message: String, texture: Texture2D) -> void:
-	if is_showing_notification:
-		print("Уведомление уже показывается. Ждём...")
-		return
+	# Добавляем уведомление в очередь
+	notification_queue.append({"message": message, "texture": texture})
+	
+	# Если уведомление не показывается, начинаем обработку очереди
+	if not is_showing_notification:
+		_process_notification_queue()
 
+func _process_notification_queue() -> void:
+	if notification_queue.is_empty() or is_showing_notification:
+		return
+	
 	is_showing_notification = true
+	
+	# Берём первое уведомление из очереди
+	var notification_data = notification_queue.pop_front()
+	var message = notification_data.message
+	var texture = notification_data.texture
 	
 	var notification_scene = load(NOTIFICATION_SCENE_PATH) as PackedScene
 	if notification_scene:
@@ -52,12 +64,15 @@ func show_notification(message: String, texture: Texture2D) -> void:
 				notification_node.visible = false
 				notification_node.queue_free()
 				
-				print("обратная анимация пошла")
 			else:
 				print("хуйня, нет notification_animation_rev")
 		else:
 			print("хуйня, нет AnimationPlayer или notification_animation")
 	else:
 		print("Хуйня, не смог загрузить сцену уведомления")
-
+	
 	is_showing_notification = false
+	
+	# Обрабатываем следующее уведомление в очереди, если есть
+	if not notification_queue.is_empty():
+		_process_notification_queue()
