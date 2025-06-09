@@ -99,7 +99,7 @@ func set_audio_volume(volume: float):
 		print("audio_player не инициализирован, хз что делать")
 
 func on_fade_in_complete():
-	print("появление звука завершено")
+	pass
 
 func next_track():
 	current_track_index += 1

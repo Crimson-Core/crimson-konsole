@@ -54,7 +54,6 @@ func show_panel():
 			side_panel_buttons[side_panel_current_index].focus_mode = Control.FOCUS_ALL
 			# Затем устанавливаем фокус
 			side_panel_buttons[side_panel_current_index].grab_focus()
-			print("Принудительно установлен фокус на: ", side_panel_buttons[side_panel_current_index].name)
 			
 func hide_panel():
 	if side_panel_moving or not side_panel_shown:
@@ -128,7 +127,6 @@ func side_panel_move_focus(direction: int):
 	if side_panel_current_index < side_panel_buttons.size():
 		side_panel_buttons[side_panel_current_index].focus_mode = Control.FOCUS_ALL
 		side_panel_buttons[side_panel_current_index].grab_focus()
-		print("Фокус на кнопке: ", side_panel_buttons[side_panel_current_index].name)
 
 func side_panel_change_scene(button: Button = null):
 	var button_name := ""

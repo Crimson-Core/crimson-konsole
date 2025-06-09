@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://m8nha0xnac7y"]
+[gd_scene load_steps=18 format=3 uid="uid://m8nha0xnac7y"]
 
 [ext_resource type="Script" uid="uid://bq5fqq12ljivu" path="res://scripts/GameAdd.gd" id="1_jlcgv"]
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_mct5f"]
@@ -9,6 +9,7 @@
 [ext_resource type="FontFile" uid="uid://bl33m6ku6ffwm" path="res://assets/fonts/Jost/Jost-VariableFont_wght.ttf" id="7_8e8ny"]
 [ext_resource type="Texture2D" uid="uid://vckwtjp05t7f" path="res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png" id="8_qgo40"]
 [ext_resource type="FontFile" uid="uid://dj3q2lpnkcabm" path="res://assets/fonts/Montserrat-Medium.ttf" id="9_qgo40"]
+[ext_resource type="Texture2D" uid="uid://b7mu6i3jc6nyf" path="res://assets/icons/download.png" id="10_52518"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_p1mop"]
 shader = ExtResource("2_mct5f")
@@ -30,14 +31,20 @@ shader_parameter/pixel_filter = 740.0
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8ocm4"]
 texture = ExtResource("6_accbs")
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8e8ny"]
+bg_color = Color(0.854902, 0.286275, 0.286275, 0.623529)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_52518"]
 bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cbh8o"]
 bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8e8ny"]
-bg_color = Color(0.854902, 0.286275, 0.286275, 0.623529)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qgo40"]
+bg_color = Color(0.854902, 0.286275, 0.286275, 0.65098)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i4sv0"]
+bg_color = Color(0.854902, 0.286275, 0.286275, 0.541176)
 
 [node name="GameAdd" type="Control"]
 layout_mode = 3
@@ -106,18 +113,45 @@ stretch_mode = 4
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0
-offset_left = 668.0
-offset_top = 82.0
-offset_right = 1257.0
-offset_bottom = 815.0
+offset_left = 592.0
+offset_top = 22.0
+offset_right = 1330.0
+offset_bottom = 855.0
 theme_override_styles/panel = SubResource("StyleBoxTexture_8ocm4")
+
+[node name="Label" type="Label" parent="Panel"]
+layout_mode = 0
+offset_left = 282.0
+offset_top = 26.0
+offset_right = 455.0
+offset_bottom = 99.0
+theme_override_fonts/font = ExtResource("9_qgo40")
+theme_override_font_sizes/font_size = 32
+text = "Game Add"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LineEdit" type="LineEdit" parent="Panel"]
+layout_mode = 0
+offset_left = 145.0
+offset_top = 127.0
+offset_right = 594.0
+offset_bottom = 198.0
+theme_override_colors/selection_color = Color(0.854902, 0.286275, 0.286275, 1)
+theme_override_colors/caret_color = Color(0.854902, 0.286275, 0.286275, 1)
+theme_override_fonts/font = ExtResource("7_8e8ny")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_8e8ny")
+placeholder_text = "Game name..."
+alignment = 1
+caret_blink = true
 
 [node name="Executable" type="Button" parent="Panel"]
 layout_mode = 0
-offset_left = 126.0
-offset_top = 225.0
-offset_right = 470.0
-offset_bottom = 296.0
+offset_left = 47.0
+offset_top = 243.0
+offset_right = 356.0
+offset_bottom = 314.0
 size_flags_vertical = 3
 focus_mode = 1
 theme_override_fonts/font = ExtResource("7_8e8ny")
@@ -136,20 +170,128 @@ scale = Vector2(0.969954, 0.969954)
 texture = ExtResource("8_qgo40")
 expand_mode = 1
 
-[node name="LineEdit" type="LineEdit" parent="Panel"]
+[node name="Front" type="Button" parent="Panel"]
 layout_mode = 0
-offset_left = 126.0
-offset_top = 83.0
-offset_right = 470.0
-offset_bottom = 154.0
-theme_override_colors/selection_color = Color(0.854902, 0.286275, 0.286275, 1)
-theme_override_colors/caret_color = Color(0.854902, 0.286275, 0.286275, 1)
+offset_left = 389.0
+offset_top = 243.0
+offset_right = 698.0
+offset_bottom = 314.0
+size_flags_vertical = 3
+focus_mode = 1
 theme_override_fonts/font = ExtResource("7_8e8ny")
 theme_override_font_sizes/font_size = 32
-theme_override_styles/focus = SubResource("StyleBoxFlat_8e8ny")
-placeholder_text = "Game name..."
-alignment = 1
-caret_blink = true
+theme_override_styles/focus = SubResource("StyleBoxFlat_52518")
+theme_override_styles/hover = SubResource("StyleBoxFlat_cbh8o")
+text = "Front"
+autowrap_mode = 2
+clip_text = true
+
+[node name="TextureRect" type="TextureRect" parent="Panel/Front"]
+layout_mode = 2
+offset_left = 19.0
+offset_top = 5.0
+offset_right = 83.0
+offset_bottom = 69.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("8_qgo40")
+expand_mode = 1
+
+[node name="Back" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 47.0
+offset_top = 355.0
+offset_right = 355.0
+offset_bottom = 426.0
+size_flags_vertical = 3
+focus_mode = 1
+theme_override_fonts/font = ExtResource("7_8e8ny")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_52518")
+theme_override_styles/hover = SubResource("StyleBoxFlat_cbh8o")
+text = "Back
+"
+
+[node name="TextureRect" type="TextureRect" parent="Panel/Back"]
+layout_mode = 2
+offset_left = 19.0
+offset_top = 5.0
+offset_right = 83.0
+offset_bottom = 69.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("8_qgo40")
+expand_mode = 1
+
+[node name="Spine" type="Button" parent="Panel"]
+offset_left = 389.0
+offset_top = 355.0
+offset_right = 698.0
+offset_bottom = 426.0
+size_flags_vertical = 3
+focus_mode = 1
+theme_override_fonts/font = ExtResource("7_8e8ny")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_52518")
+theme_override_styles/hover = SubResource("StyleBoxFlat_cbh8o")
+text = "Spine"
+
+[node name="TextureRect" type="TextureRect" parent="Panel/Spine"]
+layout_mode = 2
+offset_left = 19.0
+offset_top = 5.0
+offset_right = 83.0
+offset_bottom = 69.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("8_qgo40")
+expand_mode = 1
+
+[node name="OptionButton" type="OptionButton" parent="Panel"]
+layout_mode = 0
+offset_left = 47.0
+offset_top = 488.0
+offset_right = 355.0
+offset_bottom = 554.0
+theme_override_fonts/font = ExtResource("9_qgo40")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_qgo40")
+theme_override_styles/hover = SubResource("StyleBoxFlat_i4sv0")
+
+[node name="Download" type="Button" parent="Panel"]
+offset_left = 389.0
+offset_top = 471.0
+offset_right = 698.0
+offset_bottom = 542.0
+size_flags_vertical = 3
+focus_mode = 1
+theme_override_fonts/font = ExtResource("7_8e8ny")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_52518")
+theme_override_styles/hover = SubResource("StyleBoxFlat_cbh8o")
+text = "Download
+Covers"
+
+[node name="TextureRect" type="TextureRect" parent="Panel/Download"]
+layout_mode = 2
+offset_left = 11.0
+offset_top = 21.0
+offset_right = 75.0
+offset_bottom = 85.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("10_52518")
+expand_mode = 1
+
+[node name="Done" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 199.0
+offset_top = 634.0
+offset_right = 543.0
+offset_bottom = 705.0
+size_flags_vertical = 3
+focus_mode = 1
+theme_override_fonts/font = ExtResource("7_8e8ny")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_52518")
+theme_override_styles/hover = SubResource("StyleBoxFlat_cbh8o")
+text = "Done"
 
 [node name="BottomPanel" type="Panel" parent="."]
 layout_mode = 0
@@ -184,4 +326,9 @@ access = 2
 use_native_dialog = true
 
 [connection signal="pressed" from="Panel/Executable" to="." method="_on_fs_pressed"]
+[connection signal="pressed" from="Panel/Front" to="." method="_on_front_pressed"]
+[connection signal="pressed" from="Panel/Back" to="." method="_on_back_pressed"]
+[connection signal="pressed" from="Panel/Spine" to="." method="_on_spine_pressed"]
+[connection signal="pressed" from="Panel/Download" to="." method="_on_download_pressed"]
+[connection signal="pressed" from="Panel/Done" to="." method="_on_done_pressed"]
 [connection signal="file_selected" from="FileDialog" to="." method="_on_file_selected"]
