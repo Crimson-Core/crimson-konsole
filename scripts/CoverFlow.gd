@@ -5,6 +5,7 @@ extends Control
 @onready var viewport_3d = $ViewportContainer/SubViewport
 @onready var camera_3d = $ViewportContainer/SubViewport/Camera3D
 @onready var game_title_label = $GameTitleLabel
+@onready var game_state_label = $GameTitleLabel/GameStateLabel
 @onready var keyboard_control = $Keyboard
 @onready var gamepad_control = $Gamepad
 @onready var a_button = $Gamepad/Instruction/Zapusk/Play
@@ -15,18 +16,15 @@ extends Control
 var games: Array[GameLoader.GameData] = []
 var game_covers: Array[GameCover3D] = []
 var current_index: int = 0
+var running_games := {} # title -> {"pid": int}
 
 @export var cover_spacing: float = 6.0
 @export var side_angle_y: float = 35.0
 @export var side_angle_x: float = 0.0
 @export var side_offset: float = 2.0
 
-# Получаем ссылку на уведомления из главной сцены
 var notification
 var notification_icon = load("res://logo.png")
-
-#const SidePanelClass = preload("res://scripts/nodes/SidePanel.gd")
-#var side_panel = SidePanelClass.new()
 
 const GamepadTypeClass = preload("res://scripts/GamepadType.gd")
 var gamepadtype = GamepadTypeClass.new()
@@ -34,27 +32,21 @@ var gamepadtype = GamepadTypeClass.new()
 const GameTimeTrackerClass = preload("res://scripts/GameTimeTracker.gd")
 var time_tracker: GameTimeTracker
 
-var game_cover_scene: PackedScene
+const SteamAPIClass = preload("res://scripts/SteamAPI.gd")
+var steam_api: SteamAPI
+@export var steam_api_key: String = ""
+
 var first_update: bool = true
 var current_input_method = "keyboard"
 var last_device_id: int = -1
 
 func _ready():
-	# Ищем уведомления в главной сцене
-	var main_scene = get_tree().get_first_node_in_group("main_scene")
-	if main_scene and main_scene.has_method("get_notification"):
-		notification = main_scene.get_notification()
-	else:
-		# Fallback - ищем в родительских узлах
-		var parent = get_parent()
-		while parent:
-			if parent.get("notification"):
-				notification = parent.notification
-				break
-			parent = parent.get_parent()
-
-	
+	find_notification()
 	time_tracker = GameTimeTrackerClass.get_instance()
+	
+	# Steam API (оставляем только инициализацию)
+	steam_api = SteamAPIClass.new(steam_api_key)
+	steam_api.setup_http_request(self)
 	
 	load_games()
 	setup_keyboard_ui()
@@ -66,14 +58,25 @@ func _ready():
 	setup_coverflow()
 	await get_tree().process_frame
 	update_display()
-	
+
+func find_notification():
+	var main_scene = get_tree().get_first_node_in_group("main_scene")
+	if main_scene and main_scene.has_method("get_notification"):
+		notification = main_scene.get_notification()
+	else:
+		var parent = get_parent()
+		while parent:
+			if parent.get("notification"):
+				notification = parent.notification
+				break
+			parent = parent.get_parent()
+
 func load_games():
 	games = GameLoader.load_all_games()
 	cleanup_unused_covers()
 
 func cleanup_unused_covers():
 	var covers_dir = "user://covers/"
-	
 	if not DirAccess.dir_exists_absolute(covers_dir):
 		return
 	
@@ -101,11 +104,11 @@ func cleanup_unused_covers():
 		file_name = dir.get_next()
 	
 	dir.list_dir_end()
-		
+
 func setup_keyboard_ui():
 	keyboard_control.visible = true
 	gamepad_control.visible = false
-	
+
 func setup_gamepad_ui():
 	keyboard_control.visible = false
 	gamepad_control.visible = true
@@ -143,13 +146,7 @@ func setup_coverflow():
 		return
 	
 	for i in range(games.size()):
-		var cover_instance: GameCover3D
-		
-		if game_cover_scene:
-			cover_instance = game_cover_scene.instantiate()
-		else:
-			cover_instance = GameCover3D.new()
-		
+		var cover_instance: GameCover3D = GameCover3D.new()
 		cover_instance.set_game_data(games[i])
 		viewport_3d.add_child(cover_instance)
 		game_covers.append(cover_instance)
@@ -176,6 +173,7 @@ func update_display():
 			rot = Vector3(-side_angle_x, side_angle_y, 0)
 			scl = Vector3(1.2, 1.2, 1.2)
 			cover.set_selected(true)
+			game_state_label.visible = running_games.has(games[i].title)
 		else:
 			var abs_offset = abs(offset)
 			pos = Vector3(offset * abs_offset, offset * cover_spacing, abs_offset * 1.5)
@@ -191,7 +189,7 @@ func update_display():
 			cover.set_target_transform(pos, rot, scl)
 	
 	first_update = false
-
+	
 func _on_up_pressed():
 	if games.size() <= 1:
 		return
@@ -244,32 +242,27 @@ func _input(event):
 		if side_panel.side_panel_shown:
 			side_panel.side_panel_change_scene()
 		else:
-			launch_current_game()
+			launch_game()
 	elif event.is_action_pressed("menu_key") or event.is_action_pressed("menu_pad"):
 		if not side_panel.side_panel_shown:
 			side_panel.show_panel()
 		else:
 			side_panel.hide_panel()
 	elif event.is_action_pressed("skip_key"):
-		# Используем систему сцен для перехода
 		get_main_scene().load_scene("res://scenes/game_add.tscn")
 
 func get_main_scene():
-	# Ищем главную сцену для смены сцен
 	var current = get_parent()
 	while current:
 		if current.has_method("load_scene"):
 			return current
 		current = current.get_parent()
 	
-	# Fallback - используем старый способ
 	get_tree().change_scene_to_file("res://scenes/game_add.tscn")
 	return null
 
 func _trigger_vibration(weak_strength: float, strong_strength: float, duration_sec: float) -> void:
-	if last_device_id < 0 or current_input_method == "keyboard":
-		return
-	else:
+	if last_device_id >= 0 and current_input_method == "gamepad":
 		Input.start_joy_vibration(last_device_id, weak_strength, strong_strength, duration_sec)
 
 func move_viewport_container(x: int, time: float):
@@ -277,157 +270,110 @@ func move_viewport_container(x: int, time: float):
 	tween.tween_property(viewport_container, "position:x", x, time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
 
-func game_info():
+# ПРОСТАЯ ФУНКЦИЯ ЗАПУСКА ИГРЫ
+func launch_game():
 	if games.is_empty():
 		return
 	
-	var current_game = games[current_index]
+	var game = games[current_index]
+	var title = game.title
 	
-	if current_index < game_covers.size():
-		var current_cover = game_covers[current_index]
-		if is_instance_valid(current_cover):
-			current_cover.start_fast_spin_move_animation()
-			move_viewport_container(10, 0.9)
-
-func launch_current_game():
-	if games.is_empty():
+	# Проверяем, не запущена ли уже
+	if running_games.has(title):
+		show_notification("Игра \"" + title + "\" уже запущена.")
 		return
 	
+	# Анимация
 	if current_index < game_covers.size():
-		var current_cover = game_covers[current_index]
-		if is_instance_valid(current_cover):
-			current_cover.stop_fast_spin_move_animation()
-			move_viewport_container(-465, 0.9)
-	
-	var current_game = games[current_index]
-	
-	if not current_game.get("executable") or current_game.executable == "":
-		if notification:
-			notification.show_notification("У игры не указан исполняемый файл!", notification_icon)
-		return
+		var cover = game_covers[current_index]
+		if is_instance_valid(cover) and cover.has_method("stop_fast_spin_move_animation"):
+			cover.stop_fast_spin_move_animation()
+		move_viewport_container(-465, 0.9)
 	
 	await get_tree().create_timer(1.0).timeout
 	
-	if launch_game_executable(current_game.executable):
-		if notification:
-			notification.show_notification("Игра \"" + current_game.title + "\" запущена!", notification_icon)
+	var exe_path = game.get("executable")
+	if exe_path.is_empty():
+		show_notification("У игры не указан исполняемый файл!")
+		return
+	
+	# Проверяем существование файла
+	if not FileAccess.file_exists(exe_path):
+		show_notification("Исполняемый файл не найден!")
+		return
+	
+	# Запускаем игру
+	var pid = _execute_game(exe_path)
+	if pid > 0:
+		_start_monitoring(title, pid)
+		show_notification("Игра \"" + title + "\" запущена!")
+	else:
+		show_notification("Не удалось запустить игру!")
 
-func launch_game_executable(executable_path: String) -> bool:
-	if executable_path == "" or not FileAccess.file_exists(executable_path):
-		if notification:
-			notification.show_notification("Исполняемый файл не найден!", notification_icon)
-		return false
-	
-	var extension = executable_path.get_extension().to_lower()
+func _execute_game(exe_path: String) -> int:
+	var working_dir = exe_path.get_base_dir()
 	var os_name = OS.get_name()
-	var working_directory = executable_path.get_base_dir()
-	
-	var command: String = ""
-	var arguments: PackedStringArray = []
 	
 	match os_name:
 		"Windows":
-			match extension:
-				"exe":
-					command = "cmd"
-					arguments = ["/c", "cd /d \"" + working_directory + "\" && \"" + executable_path + "\""]
-				"bat", "cmd":
-					command = "cmd"
-					arguments = ["/c", "cd /d \"" + working_directory + "\" && " + executable_path]
-				_:
-					if notification:
-						notification.show_notification("Неподдерживаемый файл для Windows!", notification_icon)
-					return false
+			return OS.create_process("cmd", ["/c", "cd /d \"" + working_dir + "\" && \"" + exe_path + "\""])
 		
 		"Linux":
-			match extension:
-				"sh":
-					OS.execute("chmod", ["+x", executable_path])
-					command = "sh"
-					arguments = ["-c", "cd \"" + working_directory + "\" && bash \"" + executable_path + "\""]
-				"exe":
-					if is_wine_available():
-						command = "sh"
-						arguments = ["-c", "cd \"" + working_directory + "\" && umu-run \"" + executable_path + "\""]
-					else:
-						if notification:
-							notification.show_notification("Wine не установлен! Невозможно запустить .exe файлы", notification_icon)
-						return false
-				"":
-					OS.execute("chmod", ["+x", executable_path])
-					command = "sh"
-					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
-				"x86_64":
-					OS.execute("chmod", ["+x", executable_path])
-					command = "sh"
-					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
-				_:
-					if notification:
-						notification.show_notification("Неподдерживаемый файл для Linux!", notification_icon)
-					return false
+			OS.execute("chmod", ["+x", exe_path])
+			
+			if exe_path.get_extension().to_lower() == "exe":
+				# Windows exe в Linux
+				if OS.execute("which", ["umu-run"]) == 0:
+					return OS.create_process("umu-run", [exe_path])
+				elif OS.execute("which", ["wine"]) == 0:
+					return OS.create_process("wine", [exe_path])
+				else:
+					show_notification("Для .exe нужен wine или umu-run!")
+					return -1
+			
+			return OS.create_process("sh", ["-c", "cd \"" + working_dir + "\" && ./" + exe_path.get_file()])
 		
 		"macOS":
-			match extension:
-				"app":
-					command = "open"
-					arguments = [executable_path]
-				"sh":
-					OS.execute("chmod", ["+x", executable_path])
-					command = "sh"
-					arguments = ["-c", "cd \"" + working_directory + "\" && bash \"" + executable_path + "\""]
-				"":
-					OS.execute("chmod", ["+x", executable_path])
-					command = "sh"
-					arguments = ["-c", "cd \"" + working_directory + "\" && ./" + executable_path.get_file()]
-				_:
-					if notification:
-						notification.show_notification("Неподдерживаемый файл для macOS!", notification_icon)
-					return false
+			if exe_path.get_extension().to_lower() == "app":
+				return OS.create_process("open", [exe_path])
+			else:
+				OS.execute("chmod", ["+x", exe_path])
+				return OS.create_process("sh", ["-c", "cd \"" + working_dir + "\" && ./" + exe_path.get_file()])
 		
 		_:
-			if notification:
-				notification.show_notification("Неподдерживаемая операционная система!", notification_icon)
-			return false
+			return -1
+
+# МОНИТОРИНГ ПРОЦЕССОВ
+func _start_monitoring(title: String, pid: int):
+	running_games[title] = {"pid": pid}
+	time_tracker.start_tracking(title, pid)
+	update_display()
+	_monitor_game(title)
+
+func _monitor_game(title: String):
+	var game_info = running_games[title]
 	
-	var pid = OS.create_process(command, arguments, false)
+	await get_tree().create_timer(3.0).timeout
 	
-	if pid > 0:
-		var current_game = games[current_index]
-		time_tracker.start_tracking(current_game.title, pid)
-		print("Игра запущена с PID: ", pid, " - начинаем отслеживание времени")
+	while running_games.has(title):
+		if not OS.is_process_running(game_info.pid):
+			_stop_game(title)
+			break
 		
-		#musicplayer.pause_music()
-		
-		# Запускаем асинхронный мониторинг процесса
-		monitor_process(pid, current_game.title)
-		
-		return true
-	else:
-		print("Ошибка запуска игры, PID: ", pid)
-		return false
+		await get_tree().create_timer(5.0).timeout
 
-func monitor_process(pid: int, game_title: String):
-	while OS.is_process_running(pid):
-		await get_tree().create_timer(1.0).timeout
-	time_tracker.stop_tracking()
-	#musicplayer.resume_music()
-	print("Игра ", game_title, " с PID: ", pid, " завершена, трекинг остановлен")
+func _stop_game(title: String):
+	if running_games.has(title):
+		var game_info = running_games[title]
+		time_tracker.stop_tracking(game_info.pid)
+		running_games.erase(title)
+		update_display()
+		show_notification("Игра \"" + title + "\" завершена.")
+		game_state_label.visible = false
 
-func is_wine_available() -> bool:
-	var output = []
-	var exit_code = OS.execute("which", ["umu-run"], output)
-	return exit_code == 0 and output.size() > 0
-
-func _notification(what: int) -> void:
-	match what:
-		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
-			#if musicplayer:
-				#musicplayer.pause_music()
-			set_process_input(false)
-		NOTIFICATION_WM_WINDOW_FOCUS_IN:
-			#if musicplayer and not OS.is_process_running(time_tracker.current_pid):
-				#musicplayer.resume_music()
-			set_process_input(true)
+func show_notification(message: String):
+	if notification:
+		notification.show_notification(message, notification_icon)
 
 func refresh_games():
 	load_games()
@@ -435,3 +381,10 @@ func refresh_games():
 		current_index = max(0, games.size() - 1)
 	setup_coverflow()
 	update_display()
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+			set_process_input(false)
+		NOTIFICATION_WM_WINDOW_FOCUS_IN:
+			set_process_input(true)

@@ -1,12 +1,12 @@
 class_name GameTimeTracker
 extends RefCounted
 
-# Структура для хранения данных о времени игры
+# Структура данных о времени игры — остается без изменений
 class GameTimeData:
 	var game_title: String = ""
-	var total_time: float = 0.0  # Общее время в секундах
-	var sessions: Array = []     # Массив сессий игры
-	var last_played: String = "" # Дата последней игры
+	var total_time: float = 0.0
+	var sessions: Array = []
+	var last_played: String = ""
 	
 	func _init(title: String = ""):
 		game_title = title
@@ -33,95 +33,86 @@ class GameTimeData:
 		var hours = int(seconds) / 3600
 		var minutes = (int(seconds) % 3600) / 60
 		var secs = int(seconds) % 60
-		
 		if hours > 0:
 			return "%d:%02d:%02d" % [hours, minutes, secs]
 		else:
 			return "%d:%02d" % [minutes, secs]
 
-# Синглтон для отслеживания времени
-static var instance: GameTimeTracker = null
-var tracked_games: Dictionary = {}
-var current_game: String = ""
-var current_pid: int = 0
-var start_time: float = 0.0
-var check_timer: Timer = null
+# === SINGLETON-ЧАСТЬ ===
 
+static var instance: GameTimeTracker = null
 static func get_instance() -> GameTimeTracker:
 	if instance == null:
 		instance = GameTimeTracker.new()
 	return instance
 
-# Инициализация трекера
+var tracked_games: Dictionary = {}
+var active_games: Dictionary = {}  # {pid: {"title": game_title, "start_time": float}}
+var check_timer: Timer = null
+
 func _init():
 	load_game_times()
 	setup_timer()
 
-# Настройка таймера для проверки процессов
 func setup_timer():
-	# Создаем таймер для проверки процессов каждые 5 секунд
 	check_timer = Timer.new()
 	check_timer.wait_time = 5.0
-	check_timer.timeout.connect(_check_game_process)
+	check_timer.timeout.connect(_check_game_processes)
 	check_timer.autostart = true
-	
-	# Добавляем к корневому узлу
+
 	if Engine.get_main_loop():
 		var scene_tree = Engine.get_main_loop() as SceneTree
 		if scene_tree and scene_tree.current_scene:
 			scene_tree.current_scene.add_child(check_timer)
 
-# Начать отслеживание игры
+# Начать отслеживание одной игры
 func start_tracking(game_title: String, pid: int):
 	print("Начинаем отслеживание игры: ", game_title, " PID: ", pid)
+	if active_games.has(pid):
+		print("Игра уже отслеживается: ", game_title)
+		return
 	
-	# Останавливаем предыдущее отслеживание если есть
-	if current_game != "":
-		stop_tracking()
+	active_games[pid] = {
+		"title": game_title,
+		"start_time": Time.get_unix_time_from_system()
+	}
 	
-	current_game = game_title
-	current_pid = pid
-	start_time = Time.get_unix_time_from_system()  # ИСПРАВЛЕНО
-	
-	# Создаем запись для игры если её нет
 	if not tracked_games.has(game_title):
 		tracked_games[game_title] = GameTimeData.new(game_title)
-	
-	print("Отслеживание начато для: ", game_title)
 
-# Остановить отслеживание
-func stop_tracking():
-	if current_game == "":
+# Остановить отслеживание одной игры
+func stop_tracking(pid: int):
+	if not active_games.has(pid):
 		return
 	
-	var end_time = Time.get_unix_time_from_system()  # ИСПРАВЛЕНО
-	var session_duration = end_time - start_time
+	var game_title = active_games[pid]["title"]
+	var start_time = active_games[pid]["start_time"]
+	var end_time = Time.get_unix_time_from_system()
+	var duration = end_time - start_time
 	
-	print("Остановка отслеживания для: ", current_game)
-	print("Время сессии: ", GameTimeData.format_time(session_duration))
+	print("Останавливаем отслеживание: ", game_title, " (PID: ", pid, ")")
+	print("Продолжительность сессии: ", GameTimeData.format_time(duration))
 	
-	# Добавляем сессию только если она длилась больше 30 секунд
-	if session_duration > 30:
-		if tracked_games.has(current_game):
-			tracked_games[current_game].add_session(session_duration)
+	if duration > 30:
+		if tracked_games.has(game_title):
+			tracked_games[game_title].add_session(duration)
 			save_game_times()
-			print("Сессия записана для: ", current_game)
+			print("Сессия записана для: ", game_title)
 	
-	current_game = ""
-	current_pid = 0
-	start_time = 0.0
+	active_games.erase(pid)
 
-# Проверка процесса игры
-func _check_game_process():
-	if current_pid == 0 or current_game == "":
-		return
+# Проверка всех процессов игр
+func _check_game_processes():
+	var finished_pids = []
 	
-	var is_running = is_process_running(current_pid)
-	if not is_running:
-		print("Процесс игры завершен: ", current_game)
-		stop_tracking()
+	for pid in active_games.keys():
+		if not is_process_running(pid):
+			finished_pids.append(pid)
+	
+	for pid in finished_pids:
+		stop_tracking(pid)
 
-# Проверить, запущен ли процесс (УЛУЧШЕННАЯ кроссплатформенная версия)
+# Проверка процесса (тот же метод, не изменился)
 func is_process_running(pid: int) -> bool:
 	var os_name = OS.get_name()
 	var output = []
@@ -129,41 +120,29 @@ func is_process_running(pid: int) -> bool:
 	
 	match os_name:
 		"Windows":
-			# Используем tasklist для проверки процесса
 			var exit_code = OS.execute("tasklist", ["/FI", "PID eq " + str(pid), "/NH"], output, true, true)
 			if exit_code == 0 and output.size() > 0:
 				var output_text = ""
 				for line in output:
 					output_text += line
-				# Проверяем, что PID действительно найден в выводе
 				result = output_text.contains(str(pid)) and not output_text.contains("INFO: No tasks")
 			else:
-				# Альтернативный метод для Windows - через PowerShell
-				var ps_exit_code = OS.execute("powershell", 
-					["-Command", "Get-Process -Id " + str(pid) + " -ErrorAction SilentlyContinue"], 
-					output, true, true)
+				var ps_exit_code = OS.execute("powershell", ["-Command", "Get-Process -Id " + str(pid) + " -ErrorAction SilentlyContinue"], output, true, true)
 				result = ps_exit_code == 0
 		
 		"Linux", "FreeBSD", "NetBSD", "OpenBSD":
-			# Проверяем через /proc (самый надежный способ для Linux)
 			result = DirAccess.dir_exists_absolute("/proc/" + str(pid))
-			
-			# Если /proc недоступен, используем ps
 			if not result:
 				var exit_code = OS.execute("ps", ["-p", str(pid)], output, true, true)
 				result = exit_code == 0 and output.size() > 1
 		
 		"macOS":
-			# Используем ps для проверки процесса на macOS
 			var exit_code = OS.execute("ps", ["-p", str(pid)], output, true, true)
 			result = exit_code == 0 and output.size() > 1
 		
 		_:
-			# Для неизвестных платформ пробуем универсальный подход
-			print("Неизвестная платформа: ", os_name, " - используем универсальный метод")
 			var exit_code = OS.execute("ps", ["-p", str(pid)], output, true, true)
 			if exit_code != 0:
-				# Если ps не работает, пробуем через kill -0 (Unix-like системы)
 				exit_code = OS.execute("kill", ["-0", str(pid)], output, true, true)
 				result = exit_code == 0
 			else:
