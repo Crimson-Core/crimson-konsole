@@ -323,15 +323,29 @@ func _execute_game(exe_path: String) -> int:
 			
 			if exe_path.get_extension().to_lower() == "exe":
 				# Windows exe в Linux
-				if OS.execute("which", ["umu-run"]) == 0:
-					return OS.create_process("umu-run", [exe_path])
+				if OS.execute("which", ["umi-run"]) == 0:
+					return OS.create_process("umi-run", [exe_path])
 				elif OS.execute("which", ["wine"]) == 0:
 					return OS.create_process("wine", [exe_path])
 				else:
-					show_notification("Для .exe нужен wine или umu-run!")
+					show_notification("Для .exe нужен wine/umu-run!")
 					return -1
 			
-			return OS.create_process("sh", ["-c", "cd \"" + working_dir + "\" && ./" + exe_path.get_file()])
+			# Для нативных Linux игр - создаем команду с установкой LD_LIBRARY_PATH
+			var lib_paths = []
+			var potential_lib_dirs = ["lib", "libs", "../lib", "lib64", "lib32"]
+			
+			for dir in potential_lib_dirs:
+				var full_path = working_dir + "/" + dir
+				if DirAccess.dir_exists_absolute(full_path):
+					lib_paths.append(full_path)
+			
+			lib_paths.append(working_dir)  # Сама директория игры
+			
+			var ld_library_path = ":".join(lib_paths)
+			var command = "cd \"" + working_dir + "\" && LD_LIBRARY_PATH=\"" + ld_library_path + ":$LD_LIBRARY_PATH\" ./" + exe_path.get_file()
+			
+			return OS.create_process("sh", ["-c", command])
 		
 		"macOS":
 			if exe_path.get_extension().to_lower() == "app":
@@ -339,8 +353,7 @@ func _execute_game(exe_path: String) -> int:
 			else:
 				OS.execute("chmod", ["+x", exe_path])
 				return OS.create_process("sh", ["-c", "cd \"" + working_dir + "\" && ./" + exe_path.get_file()])
-		
-		_:
+		_:	
 			return -1
 
 # МОНИТОРИНГ ПРОЦЕССОВ

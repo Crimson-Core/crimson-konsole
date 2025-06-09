@@ -1,9 +1,20 @@
 extends Control
 
 @onready var file_dialog = $FileDialog
-@onready var onscreen_keyboard = $OnscreenKeyboard
 @onready var panel = $Panel
 @onready var executable_icon = $Panel/Executable/TextureRect
+
+# Данные о игре
+@export var game_data = {
+	"title": "", # Название
+	"front": "", # Путь к передней обложке
+	"back": "", # Путь к задней обложке
+	"spine": "", # Путь к боковой обложке
+	"executable": "", # Путь к исполняемому файлу игры
+	"box_type": "xbox" # Тип модели коробки
+}
+
+var covers_path = "user://covers"
 
 # Ввод
 var current_input_method = "keyboard"
@@ -14,15 +25,45 @@ const NotificationLogicClass = preload("res://scripts/NotificationLogic.gd")
 var notification = NotificationLogicClass.new()
 var notification_icon = load("res://logo.png")
 
-# Боковая панель
-#const SidePanelClass = preload("res://scripts/nodes/SidePanel.gd")
-#var side_panel = SidePanelClass.new()
-
 func _ready():
 	add_child(notification)
+
+func ensure_covers_directory():
+	"""Создает папку covers если её нет"""
+	if not DirAccess.dir_exists_absolute(covers_path):
+		var result = DirAccess.open("user://").make_dir_recursive(covers_path.get_file())
+		if result == OK:
+			print("Папка covers создана: ", covers_path)
+		else:
+			print("Ошибка создания папки covers: ", result)
+
+func get_steamboxcover_path() -> String:
+	"""Возвращает путь к программе steamboxcover с улучшенной отладкой"""
+	var exe_path = OS.get_executable_path()
+	var exe_dir = exe_path.get_base_dir()
 	
-	#add_child(side_panel)
-	#add_child(side_panel.side_panel_instance)
+	var steamboxcover_path: String
+	if OS.get_name() == "Windows":
+		steamboxcover_path = exe_dir + "/steamboxcover.exe"
+	else:
+		steamboxcover_path = exe_dir + "/steamboxcover"
+	
+	# Проверяем также в текущей рабочей директории
+	var current_dir = OS.get_environment("PWD")
+	if current_dir == "":
+		current_dir = exe_dir
+	
+	var alt_path: String
+	if OS.get_name() == "Windows":
+		alt_path = current_dir + "/steamboxcover.exe"
+	else:
+		alt_path = current_dir + "/steamboxcover"
+	
+	# Если основной путь не существует, пробуем альтернативный
+	if not FileAccess.file_exists(steamboxcover_path) and FileAccess.file_exists(alt_path):
+		return alt_path
+	
+	return steamboxcover_path
 
 func _on_fs_pressed() -> void:
 	if OS.get_name() == "Windows":
@@ -48,9 +89,6 @@ func _on_file_selected(path):
 func _input(event):
 	var main_scene = get_tree().get_first_node_in_group("main_scene")
 	var side_panel = main_scene.get_side_panel()
-
-	if onscreen_keyboard.visible and onscreen_keyboard.controller_input_enabled:
-		return
 
 	if event is InputEventKey or event is InputEventMouseButton:
 		if current_input_method != "keyboard":

@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://m8nha0xnac7y"]
+[gd_scene load_steps=15 format=3 uid="uid://m8nha0xnac7y"]
 
 [ext_resource type="Script" uid="uid://bq5fqq12ljivu" path="res://scripts/GameAdd.gd" id="1_jlcgv"]
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_mct5f"]
@@ -8,12 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://btf24cowua1uj" path="res://assets/ui/game_add/panel.png" id="6_accbs"]
 [ext_resource type="FontFile" uid="uid://bl33m6ku6ffwm" path="res://assets/fonts/Jost/Jost-VariableFont_wght.ttf" id="7_8e8ny"]
 [ext_resource type="Texture2D" uid="uid://vckwtjp05t7f" path="res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png" id="8_qgo40"]
-[ext_resource type="Script" uid="uid://dffrfqfrco1ds" path="res://addons/onscreenkeyboard/onscreen_keyboard.gd" id="9_qgo40"]
-[ext_resource type="StyleBox" path="res://addons/onscreenkeyboard/customize/styles/defaultBackgroundStyle.tres" id="10_2ij0d"]
-[ext_resource type="StyleBox" path="res://addons/onscreenkeyboard/customize/styles/defaultNormalStyle.tres" id="11_ama77"]
-[ext_resource type="StyleBox" path="res://addons/onscreenkeyboard/customize/styles/defaultHoverStlyle.tres" id="11_fhx61"]
-[ext_resource type="StyleBox" path="res://addons/onscreenkeyboard/customize/styles/defaultPressedStyle.tres" id="12_ama77"]
-[ext_resource type="StyleBox" path="res://addons/onscreenkeyboard/customize/styles/defaultNormalSpecialKeysStyle.tres" id="13_qumfr"]
+[ext_resource type="FontFile" uid="uid://dj3q2lpnkcabm" path="res://assets/fonts/Montserrat-Medium.ttf" id="9_qgo40"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_p1mop"]
 shader = ExtResource("2_mct5f")
@@ -175,6 +170,7 @@ offset_right = 200.0
 offset_bottom = -117.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_fonts/font = ExtResource("9_qgo40")
 theme_override_font_sizes/font_size = 32
 text = "Crimson Konsole"
 horizontal_alignment = 1
@@ -186,24 +182,6 @@ ok_button_text = "Open"
 file_mode = 0
 access = 2
 use_native_dialog = true
-
-[node name="OnscreenKeyboard" type="PanelContainer" parent="."]
-visible = false
-layout_mode = 2
-offset_left = 527.0
-offset_top = 528.0
-offset_right = 1392.0
-offset_bottom = 876.0
-theme_override_styles/panel = ExtResource("10_2ij0d")
-script = ExtResource("9_qgo40")
-separation = Vector2i(5, 5)
-background = ExtResource("10_2ij0d")
-normal = ExtResource("11_ama77")
-hover = ExtResource("11_fhx61")
-pressed = ExtResource("12_ama77")
-special_keys = ExtResource("13_qumfr")
-font = ExtResource("7_8e8ny")
-metadata/_custom_type_script = "uid://dffrfqfrco1ds"
 
 [connection signal="pressed" from="Panel/Executable" to="." method="_on_fs_pressed"]
 [connection signal="file_selected" from="FileDialog" to="." method="_on_file_selected"]

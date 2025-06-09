@@ -95,21 +95,15 @@ func side_panel_init():
 		side_panel_buttons.append(home_btn)
 		# ОТКЛЮЧАЕМ автофокус
 		home_btn.focus_mode = Control.FOCUS_NONE
-		print("Добавлена кнопка Home")
 	if gameadd_btn and gameadd_btn is Button:
 		side_panel_buttons.append(gameadd_btn)
 		# ОТКЛЮЧАЕМ автофокус
 		gameadd_btn.focus_mode = Control.FOCUS_NONE
-		print("Добавлена кнопка GameAdd")
 	if settings_btn and settings_btn is Button:
 		side_panel_buttons.append(settings_btn)
 		# ОТКЛЮЧАЕМ автофокус
 		settings_btn.focus_mode = Control.FOCUS_NONE
-		print("Добавлена кнопка Settings")
 	
-	print("=== ИТОГО: порядок кнопок ===")
-	for i in range(side_panel_buttons.size()):
-		print("Индекс ", i, ": ", side_panel_buttons[i].name)
 	
 	side_panel_current_index = 0
 	
