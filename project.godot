@@ -14,7 +14,11 @@ config/name="Crimson Konsole"
 config/description="Game Launcher with Game Boxes"
 run/main_scene="uid://1v70uh5v1r74"
 config/features=PackedStringArray("4.4", "Forward Plus")
+boot_splash/bg_color=Color(0.129412, 0.129412, 0.129412, 1)
+boot_splash/fullsize=false
+boot_splash/image="uid://cdh47px35sx7w"
 config/icon="uid://bpx3hq3fbkh8d"
+boot_splash/minimum_display_time=750
 
 [autoload]
 
@@ -30,7 +34,7 @@ window/stretch/mode="viewport"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/fancy_editor_sounds/plugin.cfg", "res://addons/onscreenkeyboard/plugin.cfg")
+enabled=PackedStringArray("res://addons/fancy_editor_sounds/plugin.cfg")
 
 [input]
 
@@ -107,4 +111,5 @@ skip_key={
 
 [rendering]
 
+textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/screen_space_aa=1

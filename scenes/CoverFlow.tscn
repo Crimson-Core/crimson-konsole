@@ -1,9 +1,11 @@
-[gd_scene load_steps=23 format=3 uid="uid://cmugoubnjxiu3"]
+[gd_scene load_steps=26 format=3 uid="uid://cmugoubnjxiu3"]
 
 [ext_resource type="Script" uid="uid://frybfl02g8cs" path="res://scripts/CoverFlow.gd" id="1"]
 [ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_1pbjt"]
+[ext_resource type="Texture2D" uid="uid://ba4yqe08xdwar" path="res://assets/ui/particles.png" id="3_a80lr"]
 [ext_resource type="Texture2D" uid="uid://s48w86ax45hu" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard.png" id="5_35aor"]
 [ext_resource type="Texture2D" uid="uid://biwdoaj2uat3f" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Default/keyboard_enter.png" id="6_6hi8n"]
+[ext_resource type="Texture2D" uid="uid://djtt6ttycbuw4" path="res://assets/ui/corner.png" id="6_q6pe7"]
 [ext_resource type="Texture2D" uid="uid://dlxhgg7unex3f" path="res://assets/kenney_input-prompts_1.4/Xbox Series/Double/xbox_button_color_a.png" id="6_yspgm"]
 [ext_resource type="Texture2D" uid="uid://dlxlijwfw4tal" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard_arrows_vertical.png" id="7_35aor"]
 [ext_resource type="Texture2D" uid="uid://c6p1xu0ee11m" path="res://assets/kenney_input-prompts_1.4/Xbox Series/Double/xbox_dpad_horizontal.png" id="7_03102"]
@@ -45,6 +47,9 @@ ambient_light_source = 2
 ambient_light_color = Color(0.513726, 0.513726, 0.513726, 1)
 ambient_light_energy = 3.0
 
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_a80lr"]
+texture = ExtResource("6_q6pe7")
+
 [sub_resource type="LabelSettings" id="LabelSettings_35aor"]
 font = ExtResource("8_cp183")
 font_size = 28
@@ -77,6 +82,7 @@ stretch = true
 layer = -1
 
 [node name="Control" type="Control" parent="ViewportContainer/CanvasLayer"]
+z_index = -2
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
@@ -108,6 +114,15 @@ transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="ViewportContainer/SubViewport"]
 environment = SubResource("Environment_1")
+
+[node name="Particles" type="TextureRect" parent="."]
+z_index = -1
+layout_mode = 2
+offset_right = 1060.0
+offset_bottom = 1082.0
+texture = ExtResource("3_a80lr")
+expand_mode = 1
+stretch_mode = 4
 
 [node name="TopLeftPanel" type="Control" parent="."]
 z_index = 100
@@ -155,22 +170,23 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = 803.0
-offset_top = -1.0
-offset_right = 1046.0
-offset_bottom = 73.0
+offset_left = 1554.0
+offset_top = -20.0
+offset_right = 1881.0
+offset_bottom = 120.0
 grow_horizontal = 0
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_a80lr")
 script = ExtResource("17_35aor")
 
 [node name="Label" type="Label" parent="TopPanel/Time"]
 layout_mode = 0
-offset_left = 40.0
-offset_top = 4.0
-offset_right = 203.0
-offset_bottom = 71.0
+offset_left = 96.0
+offset_top = 9.0
+offset_right = 280.0
+offset_bottom = 96.0
 theme_override_fonts/font = ExtResource("9_66wke")
-theme_override_font_sizes/font_size = 64
+theme_override_font_sizes/font_size = 86
 text = "12:00"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -314,16 +330,16 @@ texture = ExtResource("7_35aor")
 [node name="Panel" type="Panel" parent="Keyboard/Instruction"]
 layout_mode = 0
 offset_left = 857.0
-offset_top = 107.0
+offset_top = 59.0
 offset_right = 1065.0
-offset_bottom = 158.0
+offset_bottom = 110.0
 
 [node name="Start" type="TextureRect" parent="Keyboard/Instruction"]
 layout_mode = 0
 offset_left = 860.0
-offset_top = 105.0
+offset_top = 57.0
 offset_right = 1130.0
-offset_bottom = 381.0
+offset_bottom = 333.0
 scale = Vector2(0.2, 0.2)
 texture = ExtResource("8_8dok0")
 
@@ -333,9 +349,9 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 921.0
-offset_top = 76.0
+offset_top = 28.0
 offset_right = 1054.0
-offset_bottom = 110.0
+offset_bottom = 62.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("8_35aor")
 theme_override_font_sizes/font_size = 24
@@ -488,9 +504,8 @@ offset_bottom = 804.0
 texture = ExtResource("18_plh6l")
 
 [node name="GameInfo" parent="." instance=ExtResource("18_jdtcr")]
-visible = false
 layout_mode = 1
-offset_left = 1189.0
-offset_top = 177.0
-offset_right = -255.0
-offset_bottom = -253.0
+offset_left = 1085.0
+offset_top = 200.0
+offset_right = -270.0
+offset_bottom = -298.0

@@ -34,9 +34,9 @@ class GameTimeData:
 		var minutes = (int(seconds) % 3600) / 60
 		var secs = int(seconds) % 60
 		if hours > 0:
-			return "%d:%02d:%02d" % [hours, minutes, secs]
+			return "%d ч." % hours
 		else:
-			return "%d:%02d" % [minutes, secs]
+			return "%d мин." % minutes
 
 # === SINGLETON-ЧАСТЬ ===
 

@@ -15,7 +15,7 @@ extends Node
 	"res://assets/music/sanctuary12.ogg",
 ]
 
-@export var target_volume: float = -100.0 # !!!!ВРЕМЕННО
+@export var target_volume: float = -35.0 # !!!!ВРЕМЕННО
 @export var fade_in_duration: float = 5.0
 @export var fade_pause_duration: float = 1.0  # Длительность фейда для паузы и возобновления
 

@@ -222,6 +222,7 @@ texture = ExtResource("8_qgo40")
 expand_mode = 1
 
 [node name="Spine" type="Button" parent="Panel"]
+layout_mode = 0
 offset_left = 389.0
 offset_top = 355.0
 offset_right = 698.0
@@ -256,6 +257,7 @@ theme_override_styles/focus = SubResource("StyleBoxFlat_qgo40")
 theme_override_styles/hover = SubResource("StyleBoxFlat_i4sv0")
 
 [node name="Download" type="Button" parent="Panel"]
+layout_mode = 0
 offset_left = 389.0
 offset_top = 471.0
 offset_right = 698.0

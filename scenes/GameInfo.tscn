@@ -1,9 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://bbpinh7ylcblk"]
+[gd_scene load_steps=6 format=3 uid="uid://bbpinh7ylcblk"]
 
-[ext_resource type="Texture2D" uid="uid://btf24cowua1uj" path="res://assets/ui/game_add/panel.png" id="1_eeaps"]
+[ext_resource type="Texture2D" uid="uid://bq6h7dplkwlui" path="res://assets/ui/GameInfo/gmod_logo.png" id="1_eeaps"]
+[ext_resource type="FontFile" uid="uid://dj3q2lpnkcabm" path="res://assets/fonts/Montserrat-Medium.ttf" id="2_jiu03"]
+[ext_resource type="Texture2D" uid="uid://jehega2vbos2" path="res://assets/icons/clock.png" id="3_l842j"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_y4peb"]
-texture = ExtResource("1_eeaps")
+[sub_resource type="LabelSettings" id="LabelSettings_01lx3"]
+font = ExtResource("2_jiu03")
+font_size = 24
+
+[sub_resource type="LabelSettings" id="LabelSettings_jiu03"]
+font = ExtResource("2_jiu03")
+font_size = 32
 
 [node name="GameInfo" type="Control"]
 layout_mode = 3
@@ -17,6 +24,50 @@ grow_vertical = 2
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0
-offset_right = 482.0
-offset_bottom = 654.0
-theme_override_styles/panel = SubResource("StyleBoxTexture_y4peb")
+offset_right = 563.0
+offset_bottom = 583.0
+
+[node name="GameLogo" type="TextureRect" parent="Panel"]
+visible = false
+layout_mode = 0
+offset_left = 137.0
+offset_top = 37.0
+offset_right = 420.0
+offset_bottom = 116.0
+texture = ExtResource("1_eeaps")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Time" type="Label" parent="Panel"]
+visible = false
+layout_mode = 0
+offset_left = 178.0
+offset_top = 133.0
+offset_right = 524.0
+offset_bottom = 170.0
+text = "ВЫ ИГРАЛИ: 150 ч."
+label_settings = SubResource("LabelSettings_01lx3")
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Clock" type="TextureRect" parent="Panel/Time"]
+layout_mode = 0
+offset_left = -45.0
+offset_right = -5.0
+offset_bottom = 40.0
+texture = ExtResource("3_l842j")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="GameName" type="Label" parent="Panel"]
+visible = false
+layout_mode = 0
+offset_left = 135.0
+offset_top = 43.0
+offset_right = 414.0
+offset_bottom = 99.0
+text = "GAME NAME"
+label_settings = SubResource("LabelSettings_jiu03")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
