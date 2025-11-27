@@ -25,7 +25,7 @@ var base_rotation_y: float = 0.0
 # Новый параметры анимации
 var is_fast_spinning: bool = false
 var fast_spin_speed: float = 0.0  # Один оборот за секунду
-var fast_spin_duration: float = 0.9  # Вся анимация за 1 секунду
+var fast_spin_duration: float = 0.5  # Вся анимация за 1 секунду
 var fast_spin_timer: float = 0.0
 var fast_spin_start_position: Vector3
 var fast_spin_target_position: Vector3
@@ -41,7 +41,7 @@ var return_end_position: Vector3
 var return_start_rotation_y: float
 var return_end_rotation_y: float
 
-var move_distance_x: float = 5.0
+var move_distance_x: float = 1.0
 
 var mesh_instance: MeshInstance3D
 var model_node: Node3D
@@ -199,10 +199,10 @@ func start_fast_spin_move_animation():
 	is_fast_spinning = true
 	fast_spin_timer = 0.0
 	is_animation_finished = false
-	fast_spin_start_position = position
-	fast_spin_target_position = fast_spin_start_position + Vector3(move_distance_x, 0, 0)
+	#fast_spin_start_position = position
+	#fast_spin_target_position = fast_spin_start_position + Vector3(move_distance_x, 0, 0)
 	fast_spin_start_rotation_y = rotation_degrees.y
-	fast_spin_end_rotation_y = fast_spin_start_rotation_y + 450.0  # один оборот
+	fast_spin_end_rotation_y = fast_spin_start_rotation_y + 470.0 # один оборот
 
 func stop_fast_spin_move_animation():
 	if not is_fast_spinning and not is_animation_finished:
@@ -211,29 +211,29 @@ func stop_fast_spin_move_animation():
 	is_animation_finished = false
 
 	# Начинаем возвратную анимацию
-	is_returning = true
-	return_timer = 0.0
-	return_start_position = position
-	return_end_position = fast_spin_start_position
-	return_start_rotation_y = rotation_degrees.y
-	return_end_rotation_y = fast_spin_start_rotation_y
+	#is_returning = true
+	#return_timer = 0.0
+	#return_start_position = position
+	#return_end_position = fast_spin_start_position
+	#return_start_rotation_y = rotation_degrees.y
+	#return_end_rotation_y = fast_spin_start_rotation_y
 
-func _process_return_animation(delta):
-	if not is_returning:
-		return
-	return_timer += delta
-	var progress = clamp(return_timer / return_duration, 0, 1)
-	var eased_progress = ease_in_out(progress)
-	position = return_start_position.lerp(return_end_position, eased_progress)
-	rotation_degrees.y = lerp(return_start_rotation_y, return_end_rotation_y, eased_progress)
-	var scale_factor = 1.0 + sin((1.0 - progress) * PI) * 0.1
-	scale = original_scale * scale_factor
-	if progress >= 1.0:
-		is_returning = false
-		is_animation_finished = false
-		position = return_end_position
-		rotation_degrees.y = return_end_rotation_y
-		scale = original_scale
+#func _process_return_animation(delta):
+	#if not is_returning:
+		#return
+	#return_timer += delta
+	#var progress = clamp(return_timer / return_duration, 0, 1)
+	#var eased_progress = ease_in_out(progress)
+	#position = return_start_position.lerp(return_end_position, eased_progress)
+	#rotation_degrees.y = lerp(return_start_rotation_y, return_end_rotation_y, eased_progress)
+	#var scale_factor = 1.0 + sin((1.0 - progress) * PI) * 0.1
+	#scale = original_scale * scale_factor
+	#if progress >= 1.0:
+		#is_returning = false
+		#is_animation_finished = false
+		#position = return_end_position
+		#rotation_degrees.y = return_end_rotation_y
+		#scale = original_scale
 
 func _process_fast_spin_animation(delta):
 	if not is_fast_spinning:
@@ -243,8 +243,8 @@ func _process_fast_spin_animation(delta):
 	var eased_progress = ease_in_out(progress)
 	rotation_degrees.y = lerp(fast_spin_start_rotation_y, fast_spin_end_rotation_y, eased_progress)
 	position = fast_spin_start_position.lerp(fast_spin_target_position, eased_progress)
-	var scale_factor = 1.0 + sin(progress * PI) * 0.1
-	scale = original_scale * scale_factor
+	#var scale_factor = 1.0 + sin(progress * PI) * 0.1
+	#scale = original_scale * scale_factor
 	if progress >= 1.0:
 		is_fast_spinning = false
 		fast_spin_timer = 0.0
@@ -268,9 +268,9 @@ func _process(delta):
 	if is_fast_spinning:
 		_process_fast_spin_animation(delta)
 		return
-	if is_returning:
-		_process_return_animation(delta)
-		return
+	#if is_returning:
+		#_process_return_animation(delta)
+		#return
 	if is_spinning:
 		spin_timer += delta
 		var spin_progress = spin_timer / spin_duration

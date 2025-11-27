@@ -1,6 +1,24 @@
-[gd_scene load_steps=2 format=3 uid="uid://1v70uh5v1r74"]
+[gd_scene load_steps=4 format=3 uid="uid://1v70uh5v1r74"]
 
 [ext_resource type="Script" uid="uid://dhq7ep8hbt1el" path="res://scripts/Main.gd" id="1_elqb8"]
+[ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_rvslj"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0bbpv"]
+shader = ExtResource("2_rvslj")
+shader_parameter/polar_coordinates = false
+shader_parameter/polar_center = Vector2(0.5, 0.5)
+shader_parameter/polar_zoom = 1.0
+shader_parameter/polar_repeat = 3.0
+shader_parameter/spin_rotation = 2.0
+shader_parameter/spin_speed = 7.0
+shader_parameter/offset = Vector2(0, 0)
+shader_parameter/colour_1 = Color(0.870588, 0.266667, 0.231373, 1)
+shader_parameter/colour_2 = Color(0, 0.419608, 0.705882, 1)
+shader_parameter/colour_3 = Color(0.0862745, 0.137255, 0.145098, 1)
+shader_parameter/contrast = 3.5
+shader_parameter/lighting = 0.3
+shader_parameter/spin_amount = 0.27
+shader_parameter/pixel_filter = 740.0
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -10,5 +28,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_elqb8")
+
+[node name="background" type="ColorRect" parent="."]
+modulate = Color(0.529067, 0.529067, 0.529067, 1)
+material = SubResource("ShaderMaterial_0bbpv")
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_use_anchors_ = true
 
 [node name="SceneContainer" type="Node" parent="."]

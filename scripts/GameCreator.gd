@@ -14,6 +14,7 @@ var current_button: String = ""
 var coverflow_scene: PackedScene
 
 @export var game_data = {
+	"id": "",
 	"title": "",
 	"front": "",
 	"back": "",
@@ -22,10 +23,13 @@ var coverflow_scene: PackedScene
 	"box_type": "xbox"
 }
 
+func generate_game_id() -> String:
+	"""Генерирует уникальный ID для игры"""
+	var timestamp = Time.get_unix_time_from_system()
+	var random_part = randi() % 100000
+	return "game_" + str(timestamp) + "_" + str(random_part)
+
 func _ready():
-	print("GameCreator готов, блядь")
-	
-	# Создаем файловый диалог для изображений
 	file_dialog = FileDialog.new()
 	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
@@ -66,11 +70,11 @@ func _ready():
 	ensure_covers_directory()
 	
 	# Загружаем сцену coverflow
-	coverflow_scene = preload("res://scenes/CoverFlow.tscn")
+	#coverflow_scene = preload("res://scenes/CoverFlow.tscn")
 	
-	option_button.add_item("Xbox 360", 0)
-	option_button.add_item("PC/Steam", 1)
-	option_button.item_selected.connect(_on_option_button_item_selected)
+	#option_button.add_item("Xbox 360", 0)
+	#option_button.add_item("PC/Steam", 1)
+	#option_button.item_selected.connect(_on_option_button_item_selected)
 
 func ensure_covers_directory():
 	"""Создает папку covers если её нет"""
@@ -468,6 +472,48 @@ func save_temp_game_data(data: Dictionary) -> bool:
 	else:
 		print("Ошибка сохранения временных данных")
 		return false
+
+func load_game_for_editing(game_title: String) -> bool:
+	"""Загружает данные игры для редактирования по её названию"""
+	var file_name = make_safe_filename(game_title)
+	var file_path = "user://games/" + file_name + ".json"
+	
+	# Проверяем существование файла
+	if not FileAccess.file_exists(file_path):
+		show_notification("Игра не найдена!")
+		print("Файл не существует: ", file_path)
+		return false
+	
+	# Загружаем данные
+	var file = FileAccess.open(file_path, FileAccess.READ)
+	if not file:
+		show_notification("Ошибка открытия файла игры!")
+		return false
+	
+	var json_string = file.get_as_text()
+	file.close()
+	
+	var json = JSON.new()
+	var parse_result = json.parse(json_string)
+	
+	if parse_result != OK:
+		show_notification("Ошибка чтения данных игры!")
+		print("Ошибка парсинга JSON: ", json.get_error_message())
+		return false
+	
+	var loaded_data = json.data
+	
+	# Обновляем game_data
+	game_data = {
+		"title": loaded_data.get("title", ""),
+		"front": loaded_data.get("front", ""),
+		"back": loaded_data.get("back", ""),
+		"spine": loaded_data.get("spine", ""),
+		"executable": loaded_data.get("executable", ""),
+		"box_type": loaded_data.get("box_type", "xbox")
+	}
+	
+	return true
 
 func show_notification(message: String):
 	print("Уведомление: ", message)

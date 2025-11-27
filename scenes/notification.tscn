@@ -117,6 +117,7 @@ font_size = 32
 
 [node name="Notification" type="Control"]
 visible = false
+visibility_layer = 7
 z_index = 200
 layout_mode = 3
 anchors_preset = 15

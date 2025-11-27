@@ -1,9 +1,86 @@
-[gd_scene load_steps=3 format=3 uid="uid://bbpinh7ylcblk"]
+[gd_scene load_steps=19 format=3 uid="uid://bbpinh7ylcblk"]
 
-[ext_resource type="Texture2D" uid="uid://btf24cowua1uj" path="res://assets/ui/game_add/panel.png" id="1_eeaps"]
+[ext_resource type="Texture2D" uid="uid://bq6h7dplkwlui" path="res://assets/ui/GameInfo/gmod_logo.png" id="1_eeaps"]
+[ext_resource type="FontFile" uid="uid://dj3q2lpnkcabm" path="res://assets/fonts/Montserrat-Medium.ttf" id="2_jiu03"]
+[ext_resource type="Texture2D" uid="uid://jehega2vbos2" path="res://assets/icons/clock.png" id="3_l842j"]
+[ext_resource type="Texture2D" uid="uid://c37ki7aop2bh" path="res://assets/icons/calendar.png" id="4_l842j"]
+[ext_resource type="Texture2D" uid="uid://ddnrt8bepqqrw" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard_tab.png" id="5_01lx3"]
+[ext_resource type="FontFile" uid="uid://bl33m6ku6ffwm" path="res://assets/fonts/Jost/Jost-VariableFont_wght.ttf" id="5_k0n1q"]
+[ext_resource type="Texture2D" uid="uid://vckwtjp05t7f" path="res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png" id="7_c22pe"]
+[ext_resource type="Texture2D" uid="uid://cjw1mmxf8r1l0" path="res://assets/icons/delete.png" id="8_4wgwo"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_y4peb"]
-texture = ExtResource("1_eeaps")
+[sub_resource type="LabelSettings" id="LabelSettings_01lx3"]
+font = ExtResource("2_jiu03")
+font_size = 24
+
+[sub_resource type="LabelSettings" id="LabelSettings_jiu03"]
+font = ExtResource("2_jiu03")
+font_size = 32
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c22pe"]
+bg_color = Color(0.854902, 0.286275, 0.286275, 0.623529)
+
+[sub_resource type="LabelSettings" id="LabelSettings_k0n1q"]
+font = ExtResource("2_jiu03")
+font_size = 32
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4wgwo"]
+bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nfqhb"]
+bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
+
+[sub_resource type="Animation" id="Animation_c22pe"]
+resource_name = "GameEdit"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CanvasLayer:offset")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(1, 0.34151006),
+"update": 0,
+"values": [Vector2(1085, 200), Vector2(250, 200)]
+}
+
+[sub_resource type="Animation" id="Animation_4wgwo"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CanvasLayer:offset")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1085, 200)]
+}
+
+[sub_resource type="Animation" id="Animation_nfqhb"]
+resource_name = "GameEdit"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CanvasLayer:offset")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(0.34151006, 1),
+"update": 0,
+"values": [Vector2(250, 200), Vector2(1085, 200)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_nfqhb"]
+_data = {
+&"GameEdit": SubResource("Animation_c22pe"),
+&"GameEdit_Back": SubResource("Animation_nfqhb"),
+&"RESET": SubResource("Animation_4wgwo")
+}
 
 [node name="GameInfo" type="Control"]
 layout_mode = 3
@@ -15,8 +92,267 @@ offset_bottom = -430.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Panel" type="Panel" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+layer = 0
+visible = false
+offset = Vector2(1085, 200)
+transform = Transform2D(1, 0, 0, 1, 1085, 200)
+
+[node name="Panel" type="Panel" parent="CanvasLayer"]
+offset_right = 563.0
+offset_bottom = 583.0
+
+[node name="GameLogo" type="TextureRect" parent="CanvasLayer/Panel"]
 layout_mode = 0
-offset_right = 482.0
-offset_bottom = 654.0
-theme_override_styles/panel = SubResource("StyleBoxTexture_y4peb")
+offset_left = 137.0
+offset_top = 37.0
+offset_right = 420.0
+offset_bottom = 116.0
+texture = ExtResource("1_eeaps")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Time" type="Label" parent="CanvasLayer/Panel"]
+layout_mode = 0
+offset_left = 197.0
+offset_top = 144.0
+offset_right = 543.0
+offset_bottom = 181.0
+text = "ВЫ ИГРАЛИ: 150 ч."
+label_settings = SubResource("LabelSettings_01lx3")
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Clock" type="TextureRect" parent="CanvasLayer/Panel/Time"]
+layout_mode = 0
+offset_left = -90.0
+offset_top = -13.0
+offset_right = -30.0
+offset_bottom = 49.0
+texture = ExtResource("3_l842j")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="Date" type="Label" parent="CanvasLayer/Panel"]
+layout_mode = 0
+offset_left = 197.0
+offset_top = 233.0
+offset_right = 543.0
+offset_bottom = 270.0
+text = "ВЫ ИГРАЛИ: 150 ч."
+label_settings = SubResource("LabelSettings_01lx3")
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Clock" type="TextureRect" parent="CanvasLayer/Panel/Date"]
+layout_mode = 0
+offset_left = -90.0
+offset_top = -14.0
+offset_right = -30.0
+offset_bottom = 51.0
+texture = ExtResource("4_l842j")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="GameName" type="Label" parent="CanvasLayer/Panel"]
+visible = false
+layout_mode = 0
+offset_left = 135.0
+offset_top = 43.0
+offset_right = 414.0
+offset_bottom = 99.0
+text = "GAME NAME"
+label_settings = SubResource("LabelSettings_jiu03")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="LineEdit" type="LineEdit" parent="CanvasLayer/Panel"]
+visible = false
+layout_mode = 0
+offset_left = 112.0
+offset_top = 34.0
+offset_right = 446.0
+offset_bottom = 105.0
+theme_override_colors/caret_color = Color(0.854902, 0.286275, 0.286275, 1)
+theme_override_colors/selection_color = Color(0.854902, 0.286275, 0.286275, 1)
+theme_override_fonts/font = ExtResource("5_k0n1q")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/focus = SubResource("StyleBoxFlat_c22pe")
+alignment = 1
+caret_blink = true
+
+[node name="Edit" type="Label" parent="CanvasLayer/Panel"]
+layout_mode = 0
+offset_left = 197.0
+offset_top = 372.0
+offset_right = 550.0
+offset_bottom = 412.0
+text = "CF_GE_EDIT"
+label_settings = SubResource("LabelSettings_k0n1q")
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="KeyIcon" type="TextureRect" parent="CanvasLayer/Panel/Edit"]
+layout_mode = 0
+offset_left = -106.0
+offset_top = -25.0
+offset_right = -14.0
+offset_bottom = 67.0
+texture = ExtResource("5_01lx3")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="GamepadIcon" type="TextureRect" parent="CanvasLayer/Panel/Edit"]
+layout_mode = 0
+offset_left = -106.0
+offset_top = -25.0
+offset_right = -14.0
+offset_bottom = 67.0
+texture = ExtResource("5_01lx3")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="Executable" type="Button" parent="CanvasLayer/Panel"]
+visible = false
+layout_mode = 0
+offset_left = 27.000002
+offset_top = 147.00002
+offset_right = 336.0
+offset_bottom = 218.00002
+scale = Vector2(0.8, 0.8)
+size_flags_vertical = 3
+focus_mode = 1
+theme_override_fonts/font = ExtResource("5_k0n1q")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/hover = SubResource("StyleBoxFlat_4wgwo")
+theme_override_styles/focus = SubResource("StyleBoxFlat_nfqhb")
+text = "GA_EXEC_BT"
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/Panel/Executable"]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 5.0
+offset_right = 83.0
+offset_bottom = 69.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("7_c22pe")
+expand_mode = 1
+
+[node name="Front" type="Button" parent="CanvasLayer/Panel"]
+visible = false
+layout_mode = 0
+offset_left = 294.0
+offset_top = 147.00002
+offset_right = 603.0
+offset_bottom = 218.00002
+scale = Vector2(0.8, 0.8)
+size_flags_vertical = 3
+focus_mode = 1
+theme_override_fonts/font = ExtResource("5_k0n1q")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/hover = SubResource("StyleBoxFlat_4wgwo")
+theme_override_styles/focus = SubResource("StyleBoxFlat_nfqhb")
+text = "GA_FRONT_BT"
+autowrap_mode = 2
+clip_text = true
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/Panel/Front"]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 5.0
+offset_right = 83.0
+offset_bottom = 69.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("7_c22pe")
+expand_mode = 1
+
+[node name="Back" type="Button" parent="CanvasLayer/Panel"]
+visible = false
+layout_mode = 0
+offset_left = 27.000002
+offset_top = 259.0
+offset_right = 335.0
+offset_bottom = 330.0
+scale = Vector2(0.8, 0.8)
+size_flags_vertical = 3
+focus_mode = 1
+theme_override_fonts/font = ExtResource("5_k0n1q")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/hover = SubResource("StyleBoxFlat_4wgwo")
+theme_override_styles/focus = SubResource("StyleBoxFlat_nfqhb")
+text = "GA_BACK_BT"
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/Panel/Back"]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 5.0
+offset_right = 83.0
+offset_bottom = 69.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("7_c22pe")
+expand_mode = 1
+
+[node name="Spine" type="Button" parent="CanvasLayer/Panel"]
+visible = false
+layout_mode = 0
+offset_left = 294.0
+offset_top = 259.0
+offset_right = 603.0
+offset_bottom = 330.0
+scale = Vector2(0.8, 0.8)
+size_flags_vertical = 3
+focus_mode = 1
+theme_override_fonts/font = ExtResource("5_k0n1q")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/hover = SubResource("StyleBoxFlat_4wgwo")
+theme_override_styles/focus = SubResource("StyleBoxFlat_nfqhb")
+text = "GA_SPINE_BT"
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/Panel/Spine"]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 5.0
+offset_right = 83.0
+offset_bottom = 69.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("7_c22pe")
+expand_mode = 1
+
+[node name="Delete" type="Button" parent="CanvasLayer/Panel"]
+visible = false
+layout_mode = 0
+offset_left = 137.0
+offset_top = 485.0
+offset_right = 490.75
+offset_bottom = 556.0
+scale = Vector2(0.8, 0.8)
+size_flags_vertical = 3
+focus_mode = 1
+theme_override_fonts/font = ExtResource("5_k0n1q")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/hover = SubResource("StyleBoxFlat_4wgwo")
+theme_override_styles/focus = SubResource("StyleBoxFlat_nfqhb")
+text = "CF_GE_DELETE"
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/Panel/Delete"]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 5.0
+offset_right = 83.0
+offset_bottom = 69.0
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("8_4wgwo")
+expand_mode = 1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_nfqhb")
+}
+
+[node name="FileDialog" type="FileDialog" parent="."]
+title = "Open a File"
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+use_native_dialog = true

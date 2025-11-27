@@ -22,6 +22,10 @@ const ICON_XBOX_DPAD = "res://assets/kenney_input-prompts_1.4/Xbox Series/Double
 const ICON_PS_DPAD = "res://assets/kenney_input-prompts_1.4/PlayStation Series/Double/playstation_dpad_vertical.png"
 const ICON_GENERIC_DPAD = "res://assets/kenney_input-prompts_1.4/Steam Deck/Double/steamdeck_dpad_vertical.png"
 
+const ICON_XBOX_BACK = "res://assets/kenney_input-prompts_1.4/Xbox Series/Double/xbox_button_view.png"
+const ICON_PS_BACK = "res://assets/kenney_input-prompts_1.4/PlayStation Series/Double/playstation4_button_options.png"
+const ICON_GENERIC_BACK = "res://assets/kenney_input-prompts_1.4/Xbox Series/Double/xbox_button_back_outline.png"
+
 func detect_controller_type(joy_name: String) -> ControllerType:
 	if "xbox" in joy_name or "xinput" in joy_name:
 		return ControllerType.XBOX
