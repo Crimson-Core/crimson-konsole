@@ -20,6 +20,10 @@ func _ready():
 	
 	# Загружаем начальную сцену
 	load_scene("res://scenes/CoverFlow.tscn")
+	
+	var selected_language = SettingsManager.get_setting("language", "en")
+	TranslationServer.set_locale(selected_language)
+	
 
 # Метод для получения уведомлений дочерними сценами
 func get_notification():
@@ -84,3 +88,15 @@ func load_scene(path: String) -> void:
 	await get_tree().process_frame
 	
 	scene_container.add_child(scene)
+
+func _input(event):
+	if event.is_action_pressed("lang_change"):
+		var current_locale = TranslationServer.get_locale()
+		
+		match current_locale:
+			"en":
+				TranslationServer.set_locale("ja")
+			"ja":
+				TranslationServer.set_locale("ru")
+			_: 
+				TranslationServer.set_locale("en")

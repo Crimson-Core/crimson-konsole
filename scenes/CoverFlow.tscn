@@ -1,7 +1,6 @@
-[gd_scene load_steps=26 format=3 uid="uid://cmugoubnjxiu3"]
+[gd_scene load_steps=25 format=3 uid="uid://cmugoubnjxiu3"]
 
 [ext_resource type="Script" uid="uid://frybfl02g8cs" path="res://scripts/CoverFlow.gd" id="1"]
-[ext_resource type="Shader" uid="uid://dnp31fktax2eu" path="res://shaders/background.gdshader" id="2_1pbjt"]
 [ext_resource type="Texture2D" uid="uid://ba4yqe08xdwar" path="res://assets/ui/particles.png" id="3_a80lr"]
 [ext_resource type="Texture2D" uid="uid://s48w86ax45hu" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard.png" id="5_35aor"]
 [ext_resource type="Texture2D" uid="uid://biwdoaj2uat3f" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Default/keyboard_enter.png" id="6_6hi8n"]
@@ -22,23 +21,6 @@
 [ext_resource type="PackedScene" uid="uid://bbpinh7ylcblk" path="res://scenes/GameInfo.tscn" id="18_jdtcr"]
 [ext_resource type="Texture2D" uid="uid://cv5ge4s2uwhwi" path="res://assets/images/photo_2025-06-08_00-20-13.jpg" id="18_plh6l"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_1pbjt"]
-shader = ExtResource("2_1pbjt")
-shader_parameter/polar_coordinates = false
-shader_parameter/polar_center = Vector2(0.5, 0.5)
-shader_parameter/polar_zoom = 1.0
-shader_parameter/polar_repeat = 3.0
-shader_parameter/spin_rotation = 2.0
-shader_parameter/spin_speed = 7.0
-shader_parameter/offset = Vector2(0, 0)
-shader_parameter/colour_1 = Color(0.870588, 0.266667, 0.231373, 1)
-shader_parameter/colour_2 = Color(0, 0.419608, 0.705882, 1)
-shader_parameter/colour_3 = Color(0.0862745, 0.137255, 0.145098, 1)
-shader_parameter/contrast = 3.5
-shader_parameter/lighting = 0.3
-shader_parameter/spin_amount = 0.27
-shader_parameter/pixel_filter = 740.0
-
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
 background_color = Color(0.513233, 0.513233, 0.513233, 1)
@@ -54,6 +36,9 @@ texture = ExtResource("6_q6pe7")
 font = ExtResource("8_cp183")
 font_size = 28
 font_color = Color(0.269045, 0.592174, 0.332149, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_a80lr"]
+font_size = 170
 
 [node name="CoverFlow" type="Control"]
 layout_mode = 3
@@ -78,27 +63,6 @@ grow_horizontal = 2
 grow_vertical = 2
 stretch = true
 
-[node name="CanvasLayer" type="CanvasLayer" parent="ViewportContainer"]
-layer = -1
-
-[node name="Control" type="Control" parent="ViewportContainer/CanvasLayer"]
-z_index = -2
-layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="background" type="ColorRect" parent="ViewportContainer/CanvasLayer/Control"]
-modulate = Color(0.529067, 0.529067, 0.529067, 1)
-material = SubResource("ShaderMaterial_1pbjt")
-layout_mode = 1
-anchors_preset = -1
-anchor_right = 48.0
-anchor_bottom = 27.0
-grow_horizontal = 2
-grow_vertical = 2
-metadata/_edit_use_anchors_ = true
-
 [node name="SubViewport" type="SubViewport" parent="ViewportContainer"]
 transparent_bg = true
 handle_input_locally = false
@@ -114,15 +78,6 @@ transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="ViewportContainer/SubViewport"]
 environment = SubResource("Environment_1")
-
-[node name="Particles" type="TextureRect" parent="."]
-z_index = -1
-layout_mode = 2
-offset_right = 1060.0
-offset_bottom = 1082.0
-texture = ExtResource("3_a80lr")
-expand_mode = 1
-stretch_mode = 4
 
 [node name="TopLeftPanel" type="Control" parent="."]
 z_index = 100
@@ -235,7 +190,7 @@ offset_bottom = 40.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_font_sizes/font_size = 32
-text = "Запущено"
+text = "CF_GAMESTATE_TIP"
 label_settings = SubResource("LabelSettings_35aor")
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -271,7 +226,7 @@ offset_bottom = 970.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("8_35aor")
 theme_override_font_sizes/font_size = 24
-text = "Подключена клавиатура"
+text = "CF_KBCONNECTED_TIP"
 horizontal_alignment = 1
 
 [node name="Instruction" type="Control" parent="Keyboard"]
@@ -291,7 +246,7 @@ offset_bottom = 1005.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("8_35aor")
 theme_override_font_sizes/font_size = 24
-text = "Запуск"
+text = "CF_START_TIP"
 horizontal_alignment = 1
 
 [node name="Gamepad1" type="TextureRect" parent="Keyboard/Instruction"]
@@ -308,15 +263,17 @@ layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 844.0
-offset_top = 970.0
-offset_right = 983.0
-offset_bottom = 1004.0
+offset_left = 831.0
+offset_top = 953.0
+offset_right = 998.0
+offset_bottom = 1018.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("8_35aor")
 theme_override_font_sizes/font_size = 24
-text = "Навигация"
+text = "CF_NAVI_TIP"
 horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
 
 [node name="Gamepad3" type="TextureRect" parent="Keyboard/Instruction"]
 layout_mode = 0
@@ -355,7 +312,7 @@ offset_bottom = 62.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("8_35aor")
 theme_override_font_sizes/font_size = 24
-text = "Панель"
+text = "CF_PANEL_TIP"
 horizontal_alignment = 1
 
 [node name="Gamepad" type="Control" parent="."]
@@ -386,7 +343,7 @@ offset_bottom = 1005.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("8_35aor")
 theme_override_font_sizes/font_size = 24
-text = "Запуск"
+text = "CF_START_TIP"
 horizontal_alignment = 1
 
 [node name="Play" type="TextureRect" parent="Gamepad/Instruction/Zapusk"]
@@ -415,7 +372,7 @@ offset_bottom = 1004.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("8_35aor")
 theme_override_font_sizes/font_size = 24
-text = "Навигация"
+text = "CF_NAVI_TIP"
 horizontal_alignment = 1
 
 [node name="Navigation" type="TextureRect" parent="Gamepad/Instruction/Navigation"]
@@ -435,16 +392,16 @@ offset_bottom = 40.0
 [node name="Panel" type="Panel" parent="Gamepad/Add"]
 layout_mode = 0
 offset_left = 857.0
-offset_top = 107.0
+offset_top = 59.0
 offset_right = 1065.0
-offset_bottom = 158.0
+offset_bottom = 110.0
 
 [node name="Start" type="TextureRect" parent="Gamepad/Add"]
 layout_mode = 0
-offset_left = 860.0
-offset_top = 105.0
+offset_left = 860.00006
+offset_top = 57.00002
 offset_right = 1130.0
-offset_bottom = 381.0
+offset_bottom = 333.00003
 scale = Vector2(0.2, 0.2)
 texture = ExtResource("11_8dok0")
 
@@ -454,13 +411,13 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 921.0
-offset_top = 76.0
+offset_top = 27.999985
 offset_right = 1054.0
-offset_bottom = 110.0
+offset_bottom = 61.999985
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("8_35aor")
 theme_override_font_sizes/font_size = 24
-text = "Панель"
+text = "CF_PANEL_TIP"
 horizontal_alignment = 1
 
 [node name="Controller" type="Control" parent="Gamepad"]
@@ -490,13 +447,13 @@ offset_bottom = 970.0
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("8_35aor")
 theme_override_font_sizes/font_size = 24
-text = "Подключен контроллер"
+text = "CF_GPCONNECTED_TIP"
 horizontal_alignment = 1
 
 [node name="GameTemplate" type="TextureRect" parent="."]
 visible = false
 modulate = Color(1, 1, 1, 0.701961)
-layout_mode = 2
+layout_mode = 0
 offset_left = 227.0
 offset_top = 131.0
 offset_right = 626.0
@@ -504,8 +461,35 @@ offset_bottom = 804.0
 texture = ExtResource("18_plh6l")
 
 [node name="GameInfo" parent="." instance=ExtResource("18_jdtcr")]
+visible = false
 layout_mode = 1
 offset_left = 1085.0
 offset_top = 200.0
 offset_right = -270.0
 offset_bottom = -298.0
+
+[node name="Particles" type="TextureRect" parent="."]
+z_index = -1
+layout_mode = 0
+offset_right = 1060.0
+offset_bottom = 1082.0
+texture = ExtResource("3_a80lr")
+expand_mode = 1
+stretch_mode = 4
+
+[node name="Loading" type="Label" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 569.0
+offset_top = -707.0
+offset_right = 1390.0
+offset_bottom = -486.0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("8_35aor")
+theme_override_font_sizes/font_size = 24
+text = "CF_LOADING_SPLASH"
+label_settings = SubResource("LabelSettings_a80lr")
+horizontal_alignment = 1

@@ -34,9 +34,16 @@ class GameTimeData:
 		var minutes = (int(seconds) % 3600) / 60
 		var secs = int(seconds) % 60
 		if hours > 0:
-			return "%d ч." % hours
+			return TranslationServer.translate("CF_GT_HTIME_FORMAT").format({"hours": hours})
 		else:
-			return "%d мин." % minutes
+			return TranslationServer.translate("CF_GT_MTIME_FORMAT").format({"minutes": minutes})
+			
+	func get_formatted_last_played() -> String:
+		if last_played.is_empty():
+			return tr("CF_GT_NOTIME_FORMAT")
+		
+		var dict = Time.get_datetime_dict_from_datetime_string(last_played, false)
+		return "%02d.%02d.%04d" % [dict.day, dict.month, dict.year]
 
 # === SINGLETON-ЧАСТЬ ===
 
@@ -263,3 +270,27 @@ func clear_all_times():
 	tracked_games.clear()
 	save_game_times()
 	print("Все данные о времени очищены")
+	
+func cleanup_game_time(games_array: Array):
+	var valid_titles: Array[String] = []
+	
+	# собираем все актуальные названия игр из лаунчера
+	for game_data in games_array:
+		if game_data is GameLoader.GameData:  # на всякий случай проверка типа
+			valid_titles.append(game_data.title.strip_edges())  # или game_data.name, как у тебя там поле называется
+	
+	var games_to_remove: Array[String] = []
+	
+	for tracked_title in tracked_games.keys():
+		if not valid_titles.has(tracked_title):
+			games_to_remove.append(tracked_title)
+	
+	if games_to_remove.is_empty():
+		return
+		
+	for dead_title in games_to_remove:
+		print("удаляю: ", dead_title)
+		tracked_games.erase(dead_title)
+	
+	save_game_times()
+	print("Чистка удалённых игр завершена, удалено ", games_to_remove.size(), " игр")

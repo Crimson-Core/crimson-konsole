@@ -15,9 +15,10 @@ extends Node
 	"res://assets/music/sanctuary12.ogg",
 ]
 
-@export var target_volume: float = -35.0 # !!!!ВРЕМЕННО
-@export var fade_in_duration: float = 5.0
-@export var fade_pause_duration: float = 1.0  # Длительность фейда для паузы и возобновления
+var target_volume: float = -35.0
+var fade_in_duration: float = 5.0
+var fade_pause_duration: float = 1.0
+var music_enabled: bool = true
 
 var sanctuary_cover = load("res://assets/music/cover.jpg")
 
@@ -32,28 +33,44 @@ var notification = NotificationLogicClass.new()
 func _ready():
 	print("Инициализация музыки")
 	add_child(notification)
+	
 	if not audio_player:
 		audio_player = AudioStreamPlayer.new()
 		add_child(audio_player)
 		audio_player.finished.connect(_on_audio_stream_player_finished)
 	
+	# Загружаем настройки (SettingsManager должен быть выше в AutoLoad!)
+	load_settings_from_config()
+	
 	await get_tree().process_frame
-	start_music()
+	
+	# Запускаем музыку только если она включена
+	if music_enabled:
+		start_music()
+	else:
+		pass
+
+# Загрузка настроек из SettingsManager
+func load_settings_from_config():
+	music_enabled = SettingsManager.get_setting("music_enabled", true)
+	target_volume = SettingsManager.get_setting("music_volume", -35.0)
+	fade_in_duration = SettingsManager.get_setting("fade_in_duration", 5.0)
+	fade_pause_duration = SettingsManager.get_setting("fade_pause_duration", 1.0)
 
 func start_music():
 	if background_tracks.size() == 0:
-		print("хуйня, нет треков для воспроизведения!")
+		print("Нет треков для воспроизведения!")
 		return
 	
 	shuffled_playlist = background_tracks.duplicate()
 	shuffled_playlist.shuffle()
 	current_track_index = 0
 	play_current_track()
-	print("музыка пошла, треков: ", shuffled_playlist.size())
+	print("Музыка пошла, треков: ", shuffled_playlist.size())
 
 func play_current_track():
 	if shuffled_playlist.size() == 0 or current_track_index >= shuffled_playlist.size():
-		print("плейлист пуст или треки кончились, начинаем заново")
+		print("Плейлист пуст или треки кончились, начинаем заново")
 		shuffled_playlist = background_tracks.duplicate()
 		shuffled_playlist.shuffle()
 		current_track_index = 0
@@ -61,13 +78,13 @@ func play_current_track():
 	var track_path = shuffled_playlist[current_track_index]
 	
 	if not ResourceLoader.exists(track_path):
-		print("файл не найден: ", track_path)
+		print("Файл не найден: ", track_path)
 		next_track()
 		return
 	
 	var audio_stream = load(track_path)
 	if audio_stream == null:
-		print("не удалось загрузить трек: ", track_path)
+		print("Не удалось загрузить трек: ", track_path)
 		next_track()
 		return
 	
@@ -76,10 +93,11 @@ func play_current_track():
 	audio_player.play()
 	
 	start_fade_in()
-	print("♪ играет: ", track_path.get_file())
+	print("♪ Играет: ", track_path.get_file())
 	var raw_name = track_path.get_file().get_basename()
 	var pretty_name = raw_name.replace("_", " ").capitalize()
-	var notification_text = "СЕЙЧАС ИГРАЕТ:\n" + pretty_name
+	var notification_text = tr("NTF_NOWPLAYING") + pretty_name
+	await get_tree().create_timer(0.5).timeout
 	notification.show_notification(notification_text, sanctuary_cover)
 
 func start_fade_in():
@@ -144,12 +162,14 @@ func resume_music():
 		
 func set_volume(volume_db: float):
 	target_volume = volume_db
+	SettingsManager.set_setting("music_volume", volume_db)
 	if audio_player and (not tween or not tween.is_valid()):
 		audio_player.volume_db = volume_db
 		print("!!!!!!! ГРОМКОСТЬ УСТАНОВЛЕНА: ", volume_db)
 
 func set_fade_in_duration(duration: float):
 	fade_in_duration = duration
+	SettingsManager.set_setting("fade_in_duration", duration)
 	print("длительность фейда: ", duration)
 
 func skip_track():
@@ -160,7 +180,11 @@ func skip_track():
 
 func _notification(what: int) -> void:
 	match what:
-		NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT when music_enabled:
 			pause_music()
-		NOTIFICATION_WM_WINDOW_FOCUS_IN:
+		NOTIFICATION_WM_WINDOW_FOCUS_IN when music_enabled:
 			resume_music()
+
+func _input(event):
+	if event.is_action_pressed("skip_key"):
+		MusicPlayer.skip_track()

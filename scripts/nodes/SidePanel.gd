@@ -157,4 +157,8 @@ func side_panel_change_scene(button: Button = null):
 			else:
 				hide_panel()
 		"Settings":
-			hide_panel()
+			if current_scene.name != "Settings":
+				await hide_panel()
+				main_scene.load_scene("res://scenes/Settings.tscn")
+			else:
+				hide_panel()

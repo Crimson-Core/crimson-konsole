@@ -5,10 +5,10 @@
 [ext_resource type="Texture2D" uid="uid://vckwtjp05t7f" path="res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png" id="3_waqlc"]
 [ext_resource type="Texture2D" uid="uid://dwuqa2jdp4o7f" path="res://assets/icons/settings.png" id="4_ad6hi"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ad6hi"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o4m3c"]
 bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o4m3c"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ad6hi"]
 bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
 
 [sub_resource type="Animation" id="Animation_waqlc"]
@@ -119,12 +119,12 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_fonts/font = ExtResource("1_o4m3c")
 theme_override_font_sizes/font_size = 32
-theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
-text = "Home"
+theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
+text = "SP_HOME_BT"
 
 [node name="TextureRect" type="TextureRect" parent="VBoxContainer/Home"]
-layout_mode = 2
+layout_mode = 0
 offset_left = 19.0
 offset_top = 5.0
 offset_right = 83.0
@@ -145,12 +145,12 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_fonts/font = ExtResource("1_o4m3c")
 theme_override_font_sizes/font_size = 32
-theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
-text = "Add Game"
+theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
+text = "SP_ADDGAME_BT"
 
 [node name="TextureRect" type="TextureRect" parent="VBoxContainer/GameAdd"]
-layout_mode = 2
+layout_mode = 0
 offset_left = 19.0
 offset_top = 5.0
 offset_right = 83.0
@@ -171,9 +171,9 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_fonts/font = ExtResource("1_o4m3c")
 theme_override_font_sizes/font_size = 32
-theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
 theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
-text = "Settings"
+theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
+text = "SP_SETTINGS_BT"
 
 [node name="TextureRect" type="TextureRect" parent="VBoxContainer/Settings"]
 layout_mode = 0
