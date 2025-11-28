@@ -1,14 +1,16 @@
 class_name GameTimeTracker
 extends RefCounted
 
-# Структура данных о времени игры — остается без изменений
+# Структура данных о времени игры — теперь с game_id
 class GameTimeData:
-	var game_title: String = ""
+	var game_id: String = ""
+	var game_title: String = ""  # Оставим для обратной совместимости
 	var total_time: float = 0.0
 	var sessions: Array = []
 	var last_played: String = ""
 	
-	func _init(title: String = ""):
+	func _init(id: String = "", title: String = ""):
+		game_id = id
 		game_title = title
 		last_played = Time.get_datetime_string_from_system()
 	
@@ -53,8 +55,8 @@ static func get_instance() -> GameTimeTracker:
 		instance = GameTimeTracker.new()
 	return instance
 
-var tracked_games: Dictionary = {}
-var active_games: Dictionary = {}  # {pid: {"title": game_title, "start_time": float}}
+var tracked_games: Dictionary = {}  # {game_id: GameTimeData}
+var active_games: Dictionary = {}   # {pid: {"game_id": game_id, "start_time": float}}
 var check_timer: Timer = null
 
 func _init():
@@ -73,38 +75,41 @@ func setup_timer():
 			scene_tree.current_scene.add_child(check_timer)
 
 # Начать отслеживание одной игры
-func start_tracking(game_title: String, pid: int):
-	print("Начинаем отслеживание игры: ", game_title, " PID: ", pid)
+func start_tracking(game_id: String, game_title: String, pid: int):
+	print("Начинаем отслеживание игры: ", game_title, " (ID: ", game_id, ") PID: ", pid)
 	if active_games.has(pid):
 		print("Игра уже отслеживается: ", game_title)
 		return
 	
 	active_games[pid] = {
-		"title": game_title,
+		"game_id": game_id,
 		"start_time": Time.get_unix_time_from_system()
 	}
 	
-	if not tracked_games.has(game_title):
-		tracked_games[game_title] = GameTimeData.new(game_title)
+	if not tracked_games.has(game_id):
+		tracked_games[game_id] = GameTimeData.new(game_id, game_title)
 
 # Остановить отслеживание одной игры
 func stop_tracking(pid: int):
 	if not active_games.has(pid):
 		return
 	
-	var game_title = active_games[pid]["title"]
+	var game_id = active_games[pid]["game_id"]
 	var start_time = active_games[pid]["start_time"]
 	var end_time = Time.get_unix_time_from_system()
 	var duration = end_time - start_time
 	
-	print("Останавливаем отслеживание: ", game_title, " (PID: ", pid, ")")
+	var game_title = ""
+	if tracked_games.has(game_id):
+		game_title = tracked_games[game_id].game_title
+	print("Останавливаем отслеживание: ", game_title, " (ID: ", game_id, ") PID: ", pid)
 	print("Продолжительность сессии: ", GameTimeData.format_time(duration))
 	
 	if duration > 30:
-		if tracked_games.has(game_title):
-			tracked_games[game_title].add_session(duration)
+		if tracked_games.has(game_id):
+			tracked_games[game_id].add_session(duration)
 			save_game_times()
-			print("Сессия записана для: ", game_title)
+			print("Сессия записана для: ", game_title, " (ID: ", game_id, ")")
 	
 	active_games.erase(pid)
 
@@ -188,9 +193,10 @@ func load_game_times():
 		return
 	
 	# Загружаем данные времени
-	for game_title in data.keys():
-		var game_data = data[game_title]
-		var time_data = GameTimeData.new(game_title)
+	for game_id in data.keys():
+		var game_data = data[game_id]
+		var game_title = game_data.get("game_title", "")  # Получаем заголовок из сохранённых данных
+		var time_data = GameTimeData.new(game_id, game_title)
 		
 		if game_data.has("total_time"):
 			time_data.total_time = game_data["total_time"]
@@ -199,7 +205,7 @@ func load_game_times():
 		if game_data.has("last_played"):
 			time_data.last_played = game_data["last_played"]
 		
-		tracked_games[game_title] = time_data
+		tracked_games[game_id] = time_data
 	
 	print("Загружено времени для ", tracked_games.size(), " игр")
 
@@ -209,9 +215,10 @@ func save_game_times():
 	var data = {}
 	
 	# Конвертируем в Dictionary для сохранения
-	for game_title in tracked_games.keys():
-		var time_data = tracked_games[game_title]
-		data[game_title] = {
+	for game_id in tracked_games.keys():
+		var time_data = tracked_games[game_id]
+		data[game_id] = {
+			"game_title": time_data.game_title,  # Сохраняем заголовок для обратной совместимости
 			"total_time": time_data.total_time,
 			"sessions": time_data.sessions,
 			"last_played": time_data.last_played
@@ -226,10 +233,18 @@ func save_game_times():
 	else:
 		print("Ошибка сохранения времени игр")
 
-# Получить время игры
+# Получить время игры по ID
+func get_game_time_by_id(game_id: String) -> GameTimeData:
+	if tracked_games.has(game_id):
+		return tracked_games[game_id]
+	return null
+
+# Получить время игры по названию (для обратной совместимости)
 func get_game_time(game_title: String) -> GameTimeData:
-	if tracked_games.has(game_title):
-		return tracked_games[game_title]
+	# Ищем по ID, используя заголовок как ключ (для совместимости)
+	for game_id in tracked_games.keys():
+		if tracked_games[game_id].game_title == game_title:
+			return tracked_games[game_id]
 	return null
 
 # Получить все игры с временем
@@ -240,10 +255,11 @@ func get_all_game_times() -> Dictionary:
 func get_top_games_by_time(limit: int = 10) -> Array:
 	var games_array = []
 	
-	for game_title in tracked_games.keys():
-		var time_data = tracked_games[game_title]
+	for game_id in tracked_games.keys():
+		var time_data = tracked_games[game_id]
 		games_array.append({
-			"title": game_title,
+			"game_id": game_id,
+			"title": time_data.game_title,
 			"time": time_data.total_time,
 			"formatted_time": time_data.get_formatted_total_time(),
 			"last_played": time_data.last_played
@@ -258,12 +274,19 @@ func get_top_games_by_time(limit: int = 10) -> Array:
 	
 	return games_array
 
-# Очистить данные о времени для игры
-func clear_game_time(game_title: String):
-	if tracked_games.has(game_title):
-		tracked_games.erase(game_title)
+# Очистить данные о времени для игры по ID
+func clear_game_time_by_id(game_id: String):
+	if tracked_games.has(game_id):
+		tracked_games.erase(game_id)
 		save_game_times()
-		print("Время игры очищено для: ", game_title)
+		print("Время игры очищено для ID: ", game_id)
+
+# Очистить данные о времени для игры по названию (для обратной совместимости)
+func clear_game_time(game_title: String):
+	for game_id in tracked_games.keys():
+		if tracked_games[game_id].game_title == game_title:
+			clear_game_time_by_id(game_id)
+			return
 
 # Очистить все данные о времени
 func clear_all_times():
@@ -272,25 +295,26 @@ func clear_all_times():
 	print("Все данные о времени очищены")
 	
 func cleanup_game_time(games_array: Array):
-	var valid_titles: Array[String] = []
+	var valid_ids: Array[String] = []
 	
-	# собираем все актуальные названия игр из лаунчера
+	# собираем все актуальные ID игр из лаунчера
 	for game_data in games_array:
 		if game_data is GameLoader.GameData:  # на всякий случай проверка типа
-			valid_titles.append(game_data.title.strip_edges())  # или game_data.name, как у тебя там поле называется
+			if game_data.id:
+				valid_ids.append(game_data.id)
 	
 	var games_to_remove: Array[String] = []
 	
-	for tracked_title in tracked_games.keys():
-		if not valid_titles.has(tracked_title):
-			games_to_remove.append(tracked_title)
+	for tracked_id in tracked_games.keys():
+		if not valid_ids.has(tracked_id):
+			games_to_remove.append(tracked_id)
 	
 	if games_to_remove.is_empty():
 		return
 		
-	for dead_title in games_to_remove:
-		print("удаляю: ", dead_title)
-		tracked_games.erase(dead_title)
+	for dead_id in games_to_remove:
+		print("удаляю: ", dead_id)
+		tracked_games.erase(dead_id)
 	
 	save_game_times()
 	print("Чистка удалённых игр завершена, удалено ", games_to_remove.size(), " игр")

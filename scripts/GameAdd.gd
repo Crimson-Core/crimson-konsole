@@ -312,8 +312,45 @@ func get_spine_template_path() -> String:
 	var exe_dir = exe_path.get_base_dir()
 	return exe_dir + "/steam_spine.png"
 
+func normalize_filename_for_comparison(filename: String) -> Dictionary:
+	"""
+	Нормализует имя файла для сравнения и возвращает словарь с нормализованным именем и типом обложки.
+	Возвращает: {"name": нормализованное_имя, "type": "front|back|spine|unknown"}
+	"""
+	var normalized = filename
+	
+	# Убираем расширение
+	if normalized.ends_with(".png") or normalized.ends_with(".jpg") or normalized.ends_with(".jpeg") or normalized.ends_with(".bmp") or normalized.ends_with(".webp"):
+		normalized = normalized.get_basename()
+	
+	# Определяем и убираем суффикс типа обложки
+	var cover_type = "front"  # по умолчанию - передняя обложка
+	if normalized.to_lower().ends_with("_back"):
+		cover_type = "back"
+		normalized = normalized.substr(0, normalized.length() - 5)  # убираем "_back"
+	elif normalized.to_lower().ends_with("_spine"):
+		cover_type = "spine"
+		normalized = normalized.substr(0, normalized.length() - 6)  # убираем "_spine"
+	
+	# Сохраняем оригинальное имя до очистки для разных вариантов
+	var original_normalized = normalized
+	
+	# Убираем лишние символы, которые могут мешать сравнению
+	normalized = normalized.replace(";", " ").replace(":", " ").replace("!", " ").replace("?", " ").replace(",", " ").replace("-", " ").replace("_", " ")
+	normalized = normalized.strip_edges()
+	
+	# Приводим к нижнему регистру для сравнения
+	normalized = normalized.to_lower()
+	
+	# Также создаём вариант без пробелов (для сравнения с именами, где пробелы были удалены)
+	var normalized_no_spaces = normalized.replace(" ", "")
+	
+	return {"name": normalized, "name_no_spaces": normalized_no_spaces, "original": original_normalized.to_lower(), "type": cover_type}
+
 func find_covers_for_game(game_title: String) -> Dictionary:
-	"""Ищет обложки для указанной игры в папке covers"""
+	"""
+	Ищет обложки для указанной игры в папке covers, используя нормализованное сравнение имён файлов
+	"""
 	var found = {}
 	
 	var dir = DirAccess.open(covers_path)
@@ -323,40 +360,127 @@ func find_covers_for_game(game_title: String) -> Dictionary:
 	
 	print("Ищем обложки для игры: ", game_title, " в папке: ", covers_path)
 	
+	# Используем санитизацию как в steamboxcover
+	var sanitized_game_title = sanitize_filename_for_steamboxcover(game_title)
+	print("Санитизированный заголовок игры для поиска: ", sanitized_game_title)
+	
 	dir.list_dir_begin()
 	var file_name = dir.get_next()
 	
 	while file_name != "":
-		# Проверяем точное совпадение с названием игры
-		if file_name.begins_with(game_title):
-			var full_path = covers_path + file_name
-			var lower_filename = file_name.to_lower()
+		if file_name.ends_with(".png") or file_name.ends_with(".jpg") or file_name.ends_with(".jpeg") or file_name.ends_with(".bmp") or file_name.ends_with(".webp"):
+			var original_basename = file_name.get_basename()
+			var lower_filename = original_basename.to_lower()
 			
-			# Определяем тип обложки по окончанию имени файла
-			if lower_filename.ends_with("_back.png") or lower_filename.ends_with("_back.jpg"):
-				found["back"] = full_path
-			elif lower_filename.ends_with("_spine.png") or lower_filename.ends_with("_spine.jpg"):
-				found["spine"] = full_path  
-			elif (lower_filename.ends_with(".png") or lower_filename.ends_with(".jpg")) and not lower_filename.contains("_"):
-				# Это передняя обложка (без суффикса)
-				found["front"] = full_path
+			# Определяем тип обложки
+			var cover_type = "front"
+			if lower_filename.ends_with("_back"):
+				cover_type = "back"
+			elif lower_filename.ends_with("_spine"):
+				cover_type = "spine"
+			elif lower_filename.ends_with("_logo"):
+				# Пропускаем логотипы
+				file_name = dir.get_next()
+				continue
+			# Если это не один из известных суффиксов, это front
+			
+			# Санитизируем имя файла (без суффикса)
+			var filename_without_suffix = original_basename
+			if cover_type == "back":
+				filename_without_suffix = original_basename.substr(0, original_basename.length() - 5)  # "_back"
+			elif cover_type == "spine":
+				filename_without_suffix = original_basename.substr(0, original_basename.length() - 6)  # "_spine"
+			
+			var sanitized_filename = sanitize_filename_for_steamboxcover(filename_without_suffix)
+			
+			print("Сравниваем: '", sanitized_filename, "' (тип: ", cover_type, ") с '", sanitized_game_title, "'")
+			
+			if sanitized_filename == sanitized_game_title:
+				# Совпадение найдено
+				found[cover_type] = covers_path + file_name
+				print("Найдена ", cover_type, " обложка: ", file_name)
 		
 		file_name = dir.get_next()
 	
 	dir.list_dir_end()
+	
+	print("Найдено обложек: ", found.size())
+	for key in found:
+		print("  ", key, ": ", found[key])
+	
 	return found
+	
 
 func apply_found_covers(covers: Dictionary):
-	"""Применяет найденные обложки к game_data"""
+	"""
+	Применяет найденные обложки к game_data
+	"""
 	var icon_path: String = "res://assets/icons/check.png"
+	
+	# Обновляем game_data
 	for cover_type in covers:
 		var path = covers[cover_type]
 		game_data[cover_type] = path
 		
+		# Обновляем соответствующую иконку
 		match cover_type:
-			"front": front_icon.texture = load(icon_path)
-			"back": back_icon.texture = load(icon_path)
-			"spine": spine_icon.texture = load(icon_path)
+			"front": 
+				front_icon.texture = load(icon_path)
+				print("Применена передняя обложка: ", path)
+			"back": 
+				back_icon.texture = load(icon_path)
+				print("Применена задняя обложка: ", path)
+			"spine": 
+				spine_icon.texture = load(icon_path)
+				print("Применена боковая обложка: ", path)
+
+	# Если не все обложки найдены, оставляем плюсы для недостающих
+	if not covers.has("front"):
+		var plus_icon = load("res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png")
+		front_icon.texture = plus_icon
+		print("Не найдена передняя обложка, оставлена иконка плюса")
+	
+	if not covers.has("back"):
+		var plus_icon = load("res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png")
+		back_icon.texture = plus_icon
+		print("Не найдена задняя обложка, оставлена иконка плюса")
+	
+	if not covers.has("spine"):
+		var plus_icon = load("res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png")
+		spine_icon.texture = plus_icon
+		print("Не найдена боковая обложка, оставлена иконка плюса")
+		
+func sanitize_filename_for_steamboxcover(filename: String) -> String:
+	"""
+	Санитизирует имя файла так же, как это делает steamboxcover.
+	"""
+	var safe := filename
+	
+	# Удаляем или заменяем символы, которые могут быть проблемными для имён файлов
+	var invalid_chars := ["<", ">", ":", "\"", "/", "\\", "|", "?", "*", ";", "!", ".", "'", "`", "~"]
+	
+	for c in invalid_chars:
+		safe = safe.replace(c, " ")
+	
+	# Заменяем множественные пробелы на один
+	while safe.contains("  "):
+		safe = safe.replace("  ", " ")
+	
+	# Убираем начальные и конечные пробелы
+	safe = safe.strip_edges()
+	
+	# Убираем точки в конце
+	while safe.ends_with("."):
+		safe = safe.substr(0, safe.length() - 1)
+	
+	# Ограничение длины
+	if safe.length() > 200:
+		safe = safe.substr(0, 200)
+	
+	# Убираем все пробелы, чтобы получить имя как в steamboxcover
+	var no_spaces = safe.replace(" ", "")
+	
+	return no_spaces
 
 func _on_fs_pressed() -> void:
 	current_button = "executable"
@@ -392,6 +516,8 @@ func _on_download_pressed() -> void:
 	args.append(title)
 	args.append("--output_dir")
 	args.append(ProjectSettings.globalize_path(covers_path))
+	args.append("-k")
+	args.append("ac6407f383cb7696689026c4576a7758")
 	
 	if spine_template_path != "":
 		args.append("--spine_template")
