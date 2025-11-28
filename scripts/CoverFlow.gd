@@ -62,10 +62,6 @@ var gamepadtype = GamepadTypeClass.new()
 const GameTimeTrackerClass = preload("res://scripts/GameTimeTracker.gd")
 var time_tracker: GameTimeTracker
 
-const SteamAPIClass = preload("res://scripts/SteamAPI.gd")
-var steam_api: SteamAPI
-@export var steam_api_key: String = ""
-
 var GameAddScript = load("res://scripts/GameAdd.gd")
 var game_manager = GameAddScript.new()
 var current_button: String = ""
@@ -87,13 +83,7 @@ func _ready():
 	
 	find_notification()
 	time_tracker = GameTimeTrackerClass.get_instance()
-	
-	# Steam API (оставляем только инициализацию)
-	steam_api = SteamAPIClass.new()
-	steam_api.setup_http_request(self)
-	steam_api.logo_found.connect(func(game_data): get_game_logo(game_data))
-	steam_api.game_not_found.connect(_on_logo_not_found)
-	
+
 	file_dialog.file_selected.connect(func(path): _on_file_selected(path))
 	editgame_executable.pressed.connect(func(): _on_fs_pressed())
 	editgame_front.pressed.connect(func(): _on_front_pressed())
@@ -152,10 +142,10 @@ func cleanup_unused_covers():
 		if game.get("spine") != "":
 			used_covers[game.spine] = true
 		
-		# Добавляем логотипы
-		var safe_title = sanitize_filename(game.title)
-		var logo_filename = safe_title + "_logo.png"
-		used_covers["user://covers/" + logo_filename] = true
+		# Для логотипов - проверяем все возможные имена
+		var possible_logo_names = get_possible_logo_filenames(game.title)
+		for logo_name in possible_logo_names:
+			used_covers[covers_dir + logo_name] = true
 	
 	var dir = DirAccess.open(covers_dir)
 	if not dir:
@@ -319,7 +309,7 @@ func _input(event):
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
 		if side_panel.side_panel_shown:
 			side_panel.side_panel_change_scene()
-		else:
+		elif not edit_mode and not editing:
 			launch_game()
 	elif event.is_action_pressed("menu_key") or event.is_action_pressed("menu_pad"):
 		if not side_panel.side_panel_shown:
@@ -444,8 +434,11 @@ func _execute_game(exe_path: String) -> int:
 
 # МОНИТОРИНГ ПРОЦЕССОВ
 func _start_monitoring(title: String, pid: int):
+	var game = games[current_index]  # Получаем текущую игру
+	var game_id = game.id  # Получаем ID игры
+	
 	running_games[title] = {"pid": pid}
-	time_tracker.start_tracking(title, pid)
+	time_tracker.start_tracking(game_id, title, pid)  # Теперь передаём game_id, title, pid
 	update_display()
 	_monitor_game(title)
 
@@ -487,32 +480,8 @@ func show_game_info(game_title: String):
 		game_time_label.text = tr("CF_GT_NOTIME_TIP")
 		game_date_label.text = tr("CF_GT_NODATE_TIP")
 
-	# Загружаем логотип только из памяти/диска, не обращаемся к API
-	load_logo_with_fallback(game_title)
-
-func load_logo_with_fallback(game_title: String):
-	"""Загрузка логотипа с проверкой: сначала память, потом диск, иначе текст"""
-	if logo_cache.has(game_title):
-		var cached = logo_cache[game_title]
-		if cached.has("is_fallback") and cached.is_fallback:
-			show_fallback_text(game_title)
-		else:
-			game_info_logo.texture = cached.texture
-			game_info_logo.visible = true
-			game_fallback_label.visible = false
-		return
-
-	# Проверяем диск (и загружаем в память)
-	var cached_logo = load_logo_from_cache(game_title)
-	if cached_logo != null:
-		logo_cache[game_title] = {"texture": cached_logo, "is_fallback": false}
-		game_info_logo.texture = cached_logo
-		game_info_logo.visible = true
-		game_fallback_label.visible = false
-		return
-
-	# Ничего нет — показываем текст (и не делаем новых запросов)
-	show_fallback_text(game_title)
+	# Загружаем логотип через steamboxcover
+	load_logo_with_steamboxcover(game_title)
 
 func show_fallback_text(game_title: String):
 	game_fallback_label.text = game_title
@@ -545,65 +514,104 @@ func preload_logos():
 	request_next_logo()
 
 func request_next_logo():
-	"""Посылает следующий запрос к API, если нет текущего обрабатываемого."""
+	"""Посылает следующий запрос к steamboxcover, если нет текущего обрабатываемого."""
 	if processing_request != "" or missing_logo_queue.is_empty():
 		return
 	processing_request = missing_logo_queue.pop_front()
-	steam_api.search_game_logo_only(processing_request)
-
-
-func request_logo_from_api(game_title: String):
-	if logo_cache.has(game_title) or failed_api_games.has(game_title):
-		return
-	if not missing_logo_queue.has(game_title):
-		missing_logo_queue.append(game_title)
-	request_next_logo()
-
+	request_logo_with_steamboxcover(processing_request)
 
 # --- Обработка ответа API ---
-func get_game_logo(game_data):
-	var requested_title = processing_request
-	processing_request = ""
+func load_logo_with_steamboxcover(game_title: String):
+	"""Загрузка логотипа через steamboxcover: сначала память, потом диск, иначе текст"""
+	if logo_cache.has(game_title):
+		var cached = logo_cache[game_title]
+		if cached.has("is_fallback") and cached.is_fallback:
+			show_fallback_text(game_title)
+		else:
+			game_info_logo.texture = cached.texture
+			game_info_logo.visible = true
+			game_fallback_label.visible = false
+		return
 
-	if requested_title == "":
-		requested_title = games[current_index].title if current_index >= 0 and current_index < games.size() else ""
-		print("get_game_logo: нет связывающего запроса, пробуем текущую игру: ", requested_title)
+	# Проверяем диск (и загружаем в память)
+	var cached_logo = load_logo_from_cache(game_title)
+	if cached_logo != null:
+		logo_cache[game_title] = {"texture": cached_logo, "is_fallback": false}
+		game_info_logo.texture = cached_logo
+		game_info_logo.visible = true
+		game_fallback_label.visible = false
+		return
 
-	print("=== Обработка логотипа (API) ===")
-	print("Запрошено для: '", requested_title, "'")
-	print("API название: '", game_data.name, "'")
+	# Ничего нет — показываем текст (и запускаем асинхронный поиск через steamboxcover)
+	show_fallback_text(game_title)
+	request_logo_with_steamboxcover(game_title)
 
-	var names_match = false
-	if requested_title != "":
-		names_match = are_names_similar(game_data.name, requested_title)
-	else:
-		names_match = game_data.logo_texture != null
-
-	if names_match and game_data.logo_texture != null:
-		logo_cache[requested_title] = {"texture": game_data.logo_texture, "is_fallback": false}
-		_save_logo_to_disk_async_once(requested_title, game_data.logo_texture)
-		print("✓ API нашёл логотип: ", requested_title)
-	else:
-		if requested_title != "":
-			failed_api_games.append(requested_title)
-			logo_cache[requested_title] = {"is_fallback": true}
-		print("✗ API не нашёл логотип: ", requested_title, " (найден: ", game_data.name, ")")
-
-	print("===============================")
-	request_next_logo()
-
-
-func _on_logo_not_found():
-	"""Обработка случая когда API не нашёл игру"""
-	var requested_title = processing_request
-	processing_request = ""
+func get_steamboxcover_path() -> String:
+	"""Возвращает путь к программе steamboxcover с улучшенной отладкой"""
+	var exe_path = OS.get_executable_path()
+	var exe_dir = exe_path.get_base_dir()
 	
-	if requested_title != "":
-		print("✗ API не нашёл игру: ", requested_title)
-		failed_api_games.append(requested_title)
-		logo_cache[requested_title] = {"is_fallback": true}
+	var steamboxcover_path: String
+	if OS.get_name() == "Windows":
+		steamboxcover_path = exe_dir + "/steamboxcover.exe"
+	else:
+		steamboxcover_path = exe_dir + "/steamboxcover"
 	
-	# Продолжаем обработку очереди
+	# Проверяем также в текущей рабочей директории
+	var current_dir = OS.get_environment("PWD")
+	if current_dir == "":
+		current_dir = exe_dir
+	
+	var alt_path: String
+	if OS.get_name() == "Windows":
+		alt_path = current_dir + "/steamboxcover.exe"
+	else:
+		alt_path = current_dir + "/steamboxcover"
+	
+	# Если основной путь не существует, пробуем альтернативный
+	if not FileAccess.file_exists(steamboxcover_path) and FileAccess.file_exists(alt_path):
+		return alt_path
+	
+	return steamboxcover_path
+
+func request_logo_with_steamboxcover(game_title: String):
+	"""Асинхронно запрашивает логотип через steamboxcover"""
+	if logo_cache.has(game_title) or failed_api_games.has(game_title):
+		return
+
+	var steamboxcover_path = get_steamboxcover_path()
+	if not FileAccess.file_exists(steamboxcover_path):
+		print("steamboxcover не найден, невозможно получить логотип для: ", game_title)
+		failed_api_games.append(game_title)
+		logo_cache[game_title] = {"is_fallback": true}
+		request_next_logo()
+		return
+
+	var args = ["--game", game_title, "--output_dir", ProjectSettings.globalize_path("user://covers/"), "--only_logo", "-k", "ac6407f383cb7696689026c4576a7758"]
+	var output = []
+	var result = OS.execute(steamboxcover_path, args, output, true, false)
+	
+	if result == OK:
+		# Проверяем, был ли создан логотип
+		var cached_logo = load_logo_from_cache(game_title)
+		if cached_logo != null:
+			logo_cache[game_title] = {"texture": cached_logo, "is_fallback": false}
+			# Обновляем отображение, если это текущая игра
+			if not games.is_empty() and games[current_index].title == game_title:
+				game_info_logo.texture = cached_logo
+				game_info_logo.visible = true
+				game_fallback_label.visible = false
+			print("✓ Логотип успешно получен через steamboxcover: ", game_title)
+		else:
+			print("✗ steamboxcover завершился успешно, но логотип не найден: ", game_title)
+			failed_api_games.append(game_title)
+			logo_cache[game_title] = {"is_fallback": true}
+	else:
+		print("✗ Ошибка выполнения steamboxcover для: ", game_title)
+		failed_api_games.append(game_title)
+		logo_cache[game_title] = {"is_fallback": true}
+	
+	processing_request = ""
 	request_next_logo()
 
 # --- Кэширование ---
@@ -612,7 +620,6 @@ func save_logo_to_cache(game_title: String, texture: ImageTexture):
 		return
 	logo_cache[game_title] = {"texture": texture, "is_fallback": false}
 	_save_logo_to_disk_async_once(game_title, texture)
-
 
 func _save_logo_to_disk_async_once(game_title: String, texture: ImageTexture):
 	if texture == null:
@@ -641,183 +648,104 @@ func _save_logo_to_disk_async_once(game_title: String, texture: ImageTexture):
 
 
 func load_logo_from_cache(game_title: String) -> ImageTexture:
-	var safe_title = sanitize_filename(game_title)
-	var file_path = "user://covers/" + safe_title + "_logo.png"
-
-	if not FileAccess.file_exists(file_path):
+	"""
+	Загружает логотип, ищет файл с разными вариантами санитизации.
+	"""
+	var covers_dir = "user://covers/"
+	var dir = DirAccess.open(covers_dir)
+	if not dir:
 		return null
+	
+	# Генерируем возможные имена файлов
+	var possible_names = get_possible_logo_filenames(game_title)
+	
+	for filename in possible_names:
+		var file_path = covers_dir + filename
+		if FileAccess.file_exists(file_path):
+			var image = Image.new()
+			var error = image.load(file_path)
+			if error == OK:
+				var texture = ImageTexture.new()
+				texture.set_image(image)
+				print("Загружен логотип: ", file_path)
+				return texture
+			else:
+				print("Ошибка загрузки логотипа: ", error, " из ", file_path)
+	
+	return null
 
-	var image = Image.new()
-	var error = image.load(file_path)
-	if error != OK:
-		print("Ошибка загрузки логотипа: ", error)
-		return null
-
-	var texture = ImageTexture.new()
-	texture.set_image(image)
-	print("Загружен логотип: ", file_path)
-	return texture
-
+func get_possible_logo_filenames(game_title: String) -> PackedStringArray:
+	"""
+	Генерирует возможные имена файлов логотипа, которые могут быть созданы steamboxcover.
+	"""
+	var possible_names = PackedStringArray()
+	
+	# Вариант 1: Удаление специальных символов, оставление пробелов, затем удаление пробелов
+	var variant1 = game_title
+	var special_chars := ["<", ">", ":", "\"", "/", "\\", "|", "?", "*", ";", "!", ".", "'", "`", "~"]
+	for c in special_chars:
+		variant1 = variant1.replace(c, " ")
+	while variant1.contains("  "):
+		variant1 = variant1.replace("  ", " ")
+	variant1 = variant1.strip_edges()
+	while variant1.ends_with("."):
+		variant1 = variant1.substr(0, variant1.length() - 1)
+	if variant1.length() > 200:
+		variant1 = variant1.substr(0, 200)
+	variant1 = variant1.replace(" ", "")  # Удаляем пробелы
+	possible_names.append(variant1 + "_logo.png")
+	
+	# Вариант 2: Удаление специальных символов, но оставление пробелов
+	var variant2 = game_title
+	for c in special_chars:
+		variant2 = variant2.replace(c, " ")
+	while variant2.contains("  "):
+		variant2 = variant2.replace("  ", " ")
+	variant2 = variant2.strip_edges()
+	while variant2.ends_with("."):
+		variant2 = variant2.substr(0, variant2.length() - 1)
+	if variant2.length() > 200:
+		variant2 = variant2.substr(0, 200)
+	# Оставляем пробелы
+	possible_names.append(variant2 + "_logo.png")
+	
+	# Вариант 3: Просто удаление специальных символов без замены на пробелы
+	var variant3 = game_title
+	for c in special_chars:
+		variant3 = variant3.replace(c, "")
+	variant3 = variant3.strip_edges()
+	while variant3.ends_with("."):
+		variant3 = variant3.substr(0, variant3.length() - 1)
+	if variant3.length() > 200:
+		variant3 = variant3.substr(0, 200)
+	possible_names.append(variant3 + "_logo.png")
+	
+	# Убираем дубликаты
+	var unique_names = []
+	for name in possible_names:
+		if not unique_names.has(name):
+			unique_names.append(name)
+	
+	return PackedStringArray(unique_names)
 
 func sanitize_filename(filename: String) -> String:
-	var invalid_chars := ["<", ">", ":", "\"", "/", "\\", "|", "?", "*"]
+	"""
+	Санитизирует имя файла для использования в ключах кэша и очистке.
+	Используем вариант без пробелов для консистентности.
+	"""
 	var safe := filename
-	for c in invalid_chars:
-		safe = safe.replace(c, "_")
+	var special_chars := ["<", ">", ":", "\"", "/", "\\", "|", "?", "*", ";", "!", ".", "'", "`", "~"]
+	for c in special_chars:
+		safe = safe.replace(c, " ")
+	while safe.contains("  "):
+		safe = safe.replace("  ", " ")
 	safe = safe.strip_edges()
-	# убираем конечную точку(ы)
 	while safe.ends_with("."):
 		safe = safe.substr(0, safe.length() - 1)
-	# ограничение длины
 	if safe.length() > 200:
 		safe = safe.substr(0, 200)
-	return safe
-
-func normalize_game_name(name: String) -> String:
-	if name.is_empty():
-		return ""
-	var s := name.to_lower().strip_edges()
-	# набор спецсимволов, которые превращаем в пробелы
-	var special := ["'", ":", "-", "_", ".", ",", "!", "?", "&", "+", "(", ")", "[", "]", "{", "}", "™", "®", "©", "/","\\","–","—"]
-	for ch in special:
-		if s.find(ch) != -1:
-			s = s.replace(ch, " ")
-	# заменить множественные пробелы одним
-	while s.find("  ") != -1:
-		s = s.replace("  ", " ")
-	s = s.strip_edges()
-	# простая замена римских цифр (только если отделены пробелом или в конце/начале)
-	var roman_map := {" ii":" 2", " iii":" 3", " iv":" 4", " v":" 5", " vi":" 6", " vii":" 7", " viii":" 8", " ix":" 9", " x":" 10"}
-	for r in roman_map.keys():
-		if s.find(r) != -1:
-			s = s.replace(r, roman_map[r])
-	# удаляем ведущие/хвостовые пробелы ещё раз на всякий
-	return s.strip_edges()
-
-# Одно-строчный Levenshtein (экономия памяти O(min(n,m)))
-func calculate_similarity(a: String, b: String) -> float:
-	if a == b:
-		return 1.0
-	if a.is_empty() or b.is_empty():
-		return 0.0
-	# делаем так, чтобы b была более короткой строкой (чтобы row был короче)
-	if a.length() < b.length():
-		var tmp := a; a = b; b = tmp
-	var len_a := a.length()
-	var len_b := b.length()
-	# prev_row хранит расстояния для предыдущей позиции в a
-	var prev_row := []
-	for j in range(len_b + 1):
-		prev_row.append(j)
-	for i in range(1, len_a + 1):
-		var cur_row := []
-		cur_row.append(i)
-		var ai := a[i - 1]
-		for j in range(1, len_b + 1):
-			var cost := 0 if ai == b[j - 1] else 1
-			var ins = cur_row[j - 1] + 1
-			var delet = prev_row[j] + 1
-			var subs = prev_row[j - 1] + cost
-			cur_row.append(min(ins, delet, subs))
-		prev_row = cur_row
-	var distance = prev_row[len_b]
-	var max_len = max(len_a, len_b)
-	return 1.0 - float(distance) / float(max_len)
-
-func extract_keywords(name: String) -> Array:
-	var norm := normalize_game_name(name)
-	if norm.is_empty():
-		return []
-	var words := norm.split(" ")
-	var stop := {"the":true, "a":true, "an":true, "and":true, "or":true, "of":true, "in":true, "on":true, "at":true, "to":true, "for":true, "with":true, "by":true}
-	var res := []
-	for w in words:
-		if w.length() > 2 and not stop.has(w):
-			res.append(w)
-	return res
-
-# Быстрая проверка аббревиатуры (например "ow" vs "overwatch")
-func short_abbrev_match(single: String, multi_words: Array) -> bool:
-	var abbrev := ""
-	for w in multi_words:
-		if w.length() > 0:
-			abbrev += w[0]
-	return abbrev == single
-
-func check_keyword_match(name1: String, name2: String) -> float:
-	var k1 := extract_keywords(name1)
-	var k2 := extract_keywords(name2)
-	if k1.is_empty() or k2.is_empty():
-		return 0.0
-	# уникальные ключи
-	var all := {}
-	for w in k1:
-		all[w] = true
-	for w in k2:
-		all[w] = true
-	var total := all.size()
-	# прямые совпадения + частичные (префикс) + близкие (similarity)
-	var matches := 0.0
-	for w1 in k1:
-		var found := false
-		for w2 in k2:
-			if w1 == w2:
-				matches += 1.0
-				found = true
-				break
-			# если длинные — допускаем частичное совпадение
-			if w1.length() > 4 and w2.length() > 4:
-				if w1.begins_with(w2) or w2.begins_with(w1):
-					matches += 0.7
-					found = true
-					break
-				elif calculate_similarity(w1, w2) > 0.82:
-					matches += 0.5
-					found = true
-					break
-		# не найдено — продолжаем
-	return float(matches) / float(total)
-
-func are_names_similar(api_name: String, local_name: String) -> bool:
-	var norm_api := normalize_game_name(api_name)
-	var norm_local := normalize_game_name(local_name)
-	print("Сравниваем: '", norm_api, "' с '", norm_local, "'")
-	# полное совпадение
-	if norm_api == norm_local:
-		print("Точное совпадение")
-		return true
-	# близость строк
-	var sim := calculate_similarity(norm_api, norm_local)
-	print("Схожесть строк: ", sim)
-	if sim >= 0.86:
-		print("Высокая схожесть")
-		return true
-	# совпадение ключевых слов
-	var kmatch := check_keyword_match(api_name, local_name)
-	print("Ключевые слова: ", kmatch)
-	if kmatch >= 0.72:
-		print("Хорошее совпадение ключевых слов")
-		return true
-	# если короткие названия — проверяем вхождение
-	if norm_api.length() <= 15 and norm_local.length() <= 15:
-		if norm_api.find(norm_local) != -1 or norm_local.find(norm_api) != -1:
-			var length_ratio := float(min(norm_api.length(), norm_local.length())) / float(max(norm_api.length(), norm_local.length()))
-			if length_ratio > 0.6:
-				print("Название содержится в другом")
-				return true
-	# проверка аббревиатур: API 1 слово vs локал >1 слова и наоборот
-	var api_words := norm_api.split(" ")
-	var local_words := norm_local.split(" ")
-	if api_words.size() == 1 and local_words.size() > 1:
-		if short_abbrev_match(api_words[0], local_words):
-			print("API название — аббревиатура локального")
-			return true
-	if local_words.size() == 1 and api_words.size() > 1:
-		if short_abbrev_match(local_words[0], api_words):
-			print("Локальное — аббревиатура API")
-			return true
-	print("Не совпадают")
-	return false
+	return safe.replace(" ", "")
+	
 
 func _file_dialog():
 	file_dialog.clear_filters()
@@ -914,6 +842,10 @@ func enter_editmode():
 		await get_tree().create_timer(0.3).timeout
 
 func exit_editmode():
+	if editgame_line.text == "":
+		notification.show_notification(tr("NTF_TYPEGAMENAME"), notification_icon)
+		return
+	
 	var game = games[current_index]
 	var title = game.title
 	var cover = game_covers[current_index]

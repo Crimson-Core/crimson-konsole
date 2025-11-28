@@ -27,6 +27,7 @@ func generate_game_id() -> String:
 	"""Генерирует уникальный ID для игры"""
 	var timestamp = Time.get_unix_time_from_system()
 	var random_part = randi() % 100000
+	game_data["id"] = "game_" + str(timestamp) + "_" + str(random_part)
 	return "game_" + str(timestamp) + "_" + str(random_part)
 
 func _ready():

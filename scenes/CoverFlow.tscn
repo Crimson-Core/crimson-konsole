@@ -48,7 +48,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
-steam_api_key = "B2AEAA667BF52DF7599F80F95FF0106A"
 
 [node name="ViewportContainer" type="SubViewportContainer" parent="."]
 layout_mode = 1

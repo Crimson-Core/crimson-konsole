@@ -3,6 +3,7 @@ extends RefCounted
 
 # Структура данных игры
 class GameData:
+	var id: String = ""
 	var title: String = ""
 	var front: String = ""
 	var back: String = ""
@@ -11,6 +12,8 @@ class GameData:
 	var box_type: String = "xbox"  # По умолчанию Xbox, можно "xbox" или "pc"
 	
 	func _init(data: Dictionary = {}):
+		if data.has("id"):
+			id = data["id"]
 		if data.has("title"):
 			title = data["title"]
 		if data.has("front"):
@@ -30,7 +33,6 @@ class GameData:
 static func load_all_games() -> Array[GameData]:
 	var games: Array[GameData] = []
 	var games_dir = "user://games/"
-	
 	
 	if not DirAccess.dir_exists_absolute(games_dir):
 		print("Директория games не найдена, создаем...")
