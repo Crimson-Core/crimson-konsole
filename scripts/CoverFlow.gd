@@ -109,6 +109,8 @@ func _ready():
 	
 	loading_icon.visible = false
 	
+	MusicPlayer.enable_reverb_effect(false, 0.0, 0.0)
+	
 func find_notification():
 	var main_scene = get_tree().get_first_node_in_group("main_scene")
 	if main_scene and main_scene.has_method("get_notification"):
@@ -267,7 +269,7 @@ func _on_up_pressed():
 		current_index = games.size() - 1
 	
 	update_display()
-
+	
 func _on_down_pressed():
 	if games.size() <= 1:
 		return
@@ -299,33 +301,52 @@ func _input(event):
 			side_panel.side_panel_move_focus(-1)
 		elif not edit_mode:
 			_on_up_pressed()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (16).wav", -20.0, 2.0)
 		_trigger_vibration(1.0, 0.0, 0.1)
+	
 	elif event.is_action_pressed("ui_down") or event.is_action_pressed("down_pad"):
 		if side_panel.side_panel_shown:
 			side_panel.side_panel_move_focus(1)
 		elif not edit_mode:
 			_on_down_pressed()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (16).wav", -25.0, 1.5)
 		_trigger_vibration(1.0, 0.0, 0.1)
+	
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
 		if side_panel.side_panel_shown:
 			side_panel.side_panel_change_scene()
 		elif not edit_mode and not editing:
 			launch_game()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Piano/Piano_Ui (7).wav", -15.0, 1.0)
+	
 	elif event.is_action_pressed("menu_key") or event.is_action_pressed("menu_pad"):
 		if not side_panel.side_panel_shown:
 			side_panel.show_panel()
 			game_info_node_canvas.visible = false
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 2.0)
 		else:
 			side_panel.hide_panel()
 			if not games.is_empty():
 				await get_tree().create_timer(0.15).timeout
 				game_info_node_canvas.visible = true
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 1.5)
+	
+	#elif event.is_action_pressed("back_pad"):
+		#if side_panel.side_panel_shown:
+			#side_panel.hide_panel()
+			#if not games.is_empty():
+				#await get_tree().create_timer(0.15).timeout
+				#game_info_node_canvas.visible = true
+			#MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 1.5)
+	
 	elif event.is_action_pressed("edit_key"):
 		if edit_mode and not editing:
 			exit_editmode()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (6).wav", -35.0, 0.5)
 		else:
 			if not games.is_empty() and not editing:
 				enter_editmode()
+				MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (6).wav", -25.0, 1.0)
 
 func get_main_scene():
 	var current = get_parent()

@@ -12,12 +12,15 @@ func show_notification(message: String, texture: Texture2D) -> void:
 	# Если уведомление не показывается, начинаем обработку очереди
 	if not is_showing_notification:
 		_process_notification_queue()
-
+	
 func _process_notification_queue() -> void:
 	if notification_queue.is_empty() or is_showing_notification:
 		return
 	
 	is_showing_notification = true
+	
+	MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (11).wav", -10.0, 0.5)		
+
 	
 	# Берём первое уведомление из очереди
 	var notification_data = notification_queue.pop_front()
