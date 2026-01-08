@@ -78,6 +78,12 @@ var delete_mode = false
 var editing = false
 var edit_cooldown = 0.5
 
+var edit_focusable_controls: Array[Control] = []
+var edit_current_focus_index: int = 0
+var edit_gamepad_mode: bool = false
+
+var ud_animation_finished = true
+
 func _ready():
 	loading_icon.visible = true
 	
@@ -109,6 +115,118 @@ func _ready():
 	
 	loading_icon.visible = false
 	
+	MusicPlayer.enable_reverb_effect(false, 0.0, 0.0)
+
+func _init_edit_focusable_controls():
+	edit_focusable_controls.clear()
+	
+	# Добавляем элементы в порядке навигации
+	if editgame_line:
+		edit_focusable_controls.append(editgame_line)
+		editgame_line.focus_mode = Control.FOCUS_ALL  # LineEdit должен оставаться FOCUS_ALL
+	
+	if editgame_executable:
+		edit_focusable_controls.append(editgame_executable)
+		editgame_executable.focus_mode = Control.FOCUS_NONE
+	
+	if editgame_front:
+		edit_focusable_controls.append(editgame_front)
+		editgame_front.focus_mode = Control.FOCUS_NONE
+	
+	if editgame_back:
+		edit_focusable_controls.append(editgame_back)
+		editgame_back.focus_mode = Control.FOCUS_NONE
+	
+	if editgame_spine:
+		edit_focusable_controls.append(editgame_spine)
+		editgame_spine.focus_mode = Control.FOCUS_NONE
+	
+	if editgame_delete:
+		edit_focusable_controls.append(editgame_delete)
+		editgame_delete.focus_mode = Control.FOCUS_NONE
+	
+	edit_current_focus_index = 0
+
+func _setup_edit_control_signals():
+	for control in edit_focusable_controls:
+		if control is Button or control is LineEdit:
+			control.focus_entered.connect(func(): _on_edit_control_focus_entered(control))
+			control.focus_exited.connect(func(): _on_edit_control_focus_exited(control))
+			control.mouse_entered.connect(func(): _on_edit_control_mouse_entered(control))
+
+func _on_edit_control_focus_entered(control: Control):
+	for i in edit_focusable_controls.size():
+		if edit_focusable_controls[i] == control:
+			edit_current_focus_index = i
+			break
+	
+	# Визуальная обратная связь
+	if control is Button:
+		control.modulate = Color(1.2, 1.2, 1.2)
+	elif control is LineEdit:
+		control.modulate = Color(1.1, 1.1, 1.1)
+
+func _on_edit_control_focus_exited(control: Control):
+	control.modulate = Color(1, 1, 1)
+
+func _on_edit_control_mouse_entered(control: Control):
+	if not edit_gamepad_mode:
+		return
+	
+	for i in edit_focusable_controls.size():
+		if edit_focusable_controls[i] == control:
+			edit_current_focus_index = i
+			_set_edit_focus(i)
+			break
+
+func _move_edit_focus(direction: int):
+	if edit_focusable_controls.is_empty():
+		return
+	
+	_clear_all_edit_focus()
+	edit_current_focus_index += direction
+	
+	if edit_current_focus_index < 0:
+		edit_current_focus_index = edit_focusable_controls.size() - 1
+	elif edit_current_focus_index >= edit_focusable_controls.size():
+		edit_current_focus_index = 0
+	
+	_set_edit_focus(edit_current_focus_index)
+
+func _set_edit_focus(index: int):
+	if index < 0 or index >= edit_focusable_controls.size():
+		return
+	
+	var control = edit_focusable_controls[index]
+	
+	# Для LineEdit не меняем focus_mode, так как он уже FOCUS_ALL
+	if not control is LineEdit:
+		control.focus_mode = Control.FOCUS_ALL
+	
+	control.grab_focus()
+
+func _clear_all_edit_focus():
+	for control in edit_focusable_controls:
+		# Для LineEdit оставляем FOCUS_ALL
+		if not control is LineEdit:
+			control.focus_mode = Control.FOCUS_NONE
+		control.release_focus()
+
+func _activate_edit_control():
+	if edit_current_focus_index < 0 or edit_current_focus_index >= edit_focusable_controls.size():
+		return
+	
+	var control = edit_focusable_controls[edit_current_focus_index]
+	
+	if control is Button:
+		control.emit_signal("pressed")
+		_trigger_vibration(0.5, 0.0, 0.1)
+
+func is_animation_in_progress() -> bool:
+	if not ud_animation_finished:
+			return true
+	return false
+
 func find_notification():
 	var main_scene = get_tree().get_first_node_in_group("main_scene")
 	if main_scene and main_scene.has_method("get_notification"):
@@ -248,7 +366,7 @@ func update_display():
 			rot = Vector3(-side_angle_x, side_angle_y, 0)
 			scl = Vector3(0.8, 0.8, 0.8)
 			cover.set_selected(false)
-		
+	
 		if not cover.is_animation_finished:
 			if first_update:
 				cover.position = pos
@@ -267,7 +385,7 @@ func _on_up_pressed():
 		current_index = games.size() - 1
 	
 	update_display()
-
+	
 func _on_down_pressed():
 	if games.size() <= 1:
 		return
@@ -286,46 +404,97 @@ func _input(event):
 		if current_input_method != "keyboard":
 			current_input_method = "keyboard"
 			setup_keyboard_ui()
+			if edit_mode:
+				edit_gamepad_mode = false
+				_clear_all_edit_focus()
 	elif event is InputEventJoypadButton or event is InputEventJoypadMotion:
 		if current_input_method != "gamepad":
 			current_input_method = "gamepad"
 			setup_gamepad_ui()
+			if edit_mode:
+				edit_gamepad_mode = true
+				_set_edit_focus(edit_current_focus_index)
 		var device_id = event.device
 		last_device_id = device_id
 		update_controller_icon(device_id)
 
-	if event.is_action_pressed("ui_up") or event.is_action_pressed("up_pad"):
-		if side_panel.side_panel_shown:
-			side_panel.side_panel_move_focus(-1)
-		elif not edit_mode:
+	if edit_mode and edit_gamepad_mode and not side_panel.side_panel_shown:
+		if event.is_action_pressed("ui_up") or event.is_action_pressed("up_pad"):
+			_move_edit_focus(-1)
+			_trigger_vibration(1.0, 0.0, 0.1)
+			get_viewport().set_input_as_handled()
+			MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.8)
+			return
+		
+		elif event.is_action_pressed("ui_down") or event.is_action_pressed("down_pad"):
+			_move_edit_focus(1)
+			_trigger_vibration(1.0, 0.0, 0.1)
+			get_viewport().set_input_as_handled()
+			MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.5)
+			return
+		
+		elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
+			_activate_edit_control()
+			get_viewport().set_input_as_handled()
+			MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/key-movement.mp3", -20.0, 1.5)
+			return
+
+	if event.is_action_pressed("ui_up"):
+		if not edit_mode:
 			_on_up_pressed()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (16).wav", -20.0, 2.0)
 		_trigger_vibration(1.0, 0.0, 0.1)
-	elif event.is_action_pressed("ui_down") or event.is_action_pressed("down_pad"):
-		if side_panel.side_panel_shown:
-			side_panel.side_panel_move_focus(1)
-		elif not edit_mode:
+	
+	elif event.is_action_pressed("ui_down"):
+		if not edit_mode:
 			_on_down_pressed()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (16).wav", -25.0, 1.5)
 		_trigger_vibration(1.0, 0.0, 0.1)
+	
 	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
 		if side_panel.side_panel_shown:
 			side_panel.side_panel_change_scene()
-		elif not edit_mode and not editing:
-			launch_game()
-	elif event.is_action_pressed("menu_key") or event.is_action_pressed("menu_pad"):
-		if not side_panel.side_panel_shown:
-			side_panel.show_panel()
-			game_info_node_canvas.visible = false
-		else:
-			side_panel.hide_panel()
+			get_viewport().set_input_as_handled()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 1.5)
+			MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/key-movement.mp3", -20.0, 1.5)
 			if not games.is_empty():
 				await get_tree().create_timer(0.15).timeout
 				game_info_node_canvas.visible = true
-	elif event.is_action_pressed("edit_key"):
-		if edit_mode and not editing:
-			exit_editmode()
+		elif not edit_mode and not editing:
+			launch_game()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Piano/Piano_Ui (7).wav", -15.0, 1.0)
+	
+	elif event.is_action_pressed("menu_key") or event.is_action_pressed("menu_pad"):
+		if not side_panel.side_panel_shown:
+			side_panel.show_panel()
+			get_viewport().set_input_as_handled()
+			game_info_node_canvas.visible = false
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 2.0)
 		else:
-			if not games.is_empty() and not editing:
+			side_panel.hide_panel()
+			get_viewport().set_input_as_handled()
+			if not games.is_empty():
+				await get_tree().create_timer(0.15).timeout
+				game_info_node_canvas.visible = true
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 1.5)
+	
+	elif event.is_action_pressed("back_pad"):
+		if side_panel.side_panel_shown:
+			side_panel.hide_panel()
+			get_viewport().set_input_as_handled()
+			if not games.is_empty():
+				await get_tree().create_timer(0.15).timeout
+				game_info_node_canvas.visible = true
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 1.5)
+	
+	elif event.is_action_pressed("edit_key"):
+		if edit_mode and not editing and not side_panel.side_panel_shown:
+			exit_editmode()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (6).wav", -35.0, 0.5)
+		elif not side_panel.side_panel_shown:
+			if not games.is_empty() and not editing and not is_animation_in_progress():
 				enter_editmode()
+				MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (6).wav", -25.0, 1.0)
 
 func get_main_scene():
 	var current = get_parent()
@@ -553,9 +722,9 @@ func get_steamboxcover_path() -> String:
 	
 	var steamboxcover_path: String
 	if OS.get_name() == "Windows":
-		steamboxcover_path = exe_dir + "/steamboxcover.exe"
+		steamboxcover_path = exe_dir + "/bin/steamboxcover.exe"
 	else:
-		steamboxcover_path = exe_dir + "/steamboxcover"
+		steamboxcover_path = exe_dir + "/bin/steamboxcover"
 	
 	# Проверяем также в текущей рабочей директории
 	var current_dir = OS.get_environment("PWD")
@@ -564,9 +733,9 @@ func get_steamboxcover_path() -> String:
 	
 	var alt_path: String
 	if OS.get_name() == "Windows":
-		alt_path = current_dir + "/steamboxcover.exe"
+		alt_path = current_dir + "/bin/steamboxcover.exe"
 	else:
-		alt_path = current_dir + "/steamboxcover"
+		alt_path = current_dir + "/bin/steamboxcover"
 	
 	# Если основной путь не существует, пробуем альтернативный
 	if not FileAccess.file_exists(steamboxcover_path) and FileAccess.file_exists(alt_path):
@@ -587,7 +756,7 @@ func request_logo_with_steamboxcover(game_title: String):
 		request_next_logo()
 		return
 
-	var args = ["--game", game_title, "--output_dir", ProjectSettings.globalize_path("user://covers/"), "--only_logo", "-k", "ac6407f383cb7696689026c4576a7758"]
+	var args = ["--game", game_title, "--output_dir", ProjectSettings.globalize_path("user://covers/"), "--only_logo", "--only_steamgriddb", "-k", "ac6407f383cb7696689026c4576a7758"]
 	var output = []
 	var result = OS.execute(steamboxcover_path, args, output, true, false)
 	
@@ -833,6 +1002,13 @@ func enter_editmode():
 	game_time_label.visible = false
 	game_date_label.visible = false
 	
+	_init_edit_focusable_controls()
+	_setup_edit_control_signals()
+	
+	if current_input_method == "gamepad":
+		edit_gamepad_mode = true
+		_set_edit_focus(edit_current_focus_index)
+	
 	if current_index < game_covers.size():
 		cover.start_fast_spin_move_animation()
 		move_viewport_container(500, 0.4)
@@ -898,6 +1074,8 @@ func exit_editmode():
 		game_info_node_canvas.visible = false
 		
 	edit_mode = false
+	
+	_clear_all_edit_focus()
 	
 	var t := get_tree().create_timer(edit_cooldown)
 	t.timeout.connect(_reset_edit)

@@ -13,21 +13,27 @@ extends Control
 
 # Данные о игре
 @export var game_data = {
-	"id": "", # Уникальный идентификатор игры
-	"title": "", # Название
-	"front": "", # Путь к передней обложке
-	"back": "", # Путь к задней обложке
-	"spine": "", # Путь к боковой обложке
-	"executable": "", # Путь к исполняемому файлу игры
-	"box_type": "xbox" # Тип модели коробки
+	"id": "",
+	"title": "",
+	"front": "",
+	"back": "",
+	"spine": "",
+	"executable": "",
+	"box_type": "pc",
+	"platform": "steam"
 }
 
 var covers_path = "user://covers/"
 
 # Ввод
 var current_input_method = "keyboard"
-var last_device_id: int
+var last_device_id: int = 0
 var current_button: String = ""
+
+# Управление геймпадом
+var focusable_controls: Array[Control] = []
+var current_focus_index: int = 0
+var gamepad_mode: bool = false
 
 # Уведомления
 const NotificationLogicClass = preload("res://scripts/NotificationLogic.gd")
@@ -36,15 +42,265 @@ var notification_icon = load("res://logo.png")
 
 func _ready():
 	add_child(notification)
-	
 	ensure_covers_directory()
 	
-	option_button.add_item("Xbox 360", 0)
-	option_button.add_item("PC/Steam", 1)
+	option_button.add_item("PC/Steam", 0)
+	option_button.add_item("Xbox Original", 1)
+	option_button.add_item("Xbox 360", 2)
+	option_button.add_item("Xbox One", 3)
+	option_button.add_item("Playstation 1", 4)
+	option_button.add_item("Playstation 2", 5)
+	option_button.add_item("Playstation 3", 6)
+	option_button.add_item("Playstation 4", 7)
+	option_button.add_item("Playstation 5", 8)
+	option_button.add_item("Nintendo 64", 9)
+	option_button.add_item("Nintendo GCube", 10)
+	option_button.add_item("Nintendo Wii", 11)
+	option_button.add_item("Nintendo Switch", 12)
 	option_button.item_selected.connect(_on_option_button_item_selected)
+	
+	MusicPlayer.enable_reverb_effect(true, 0.2, 0.4)
+	
+	# Инициализация управления геймпадом
+	_init_focusable_controls()
+	_setup_control_signals()
+
+func _init_focusable_controls():
+	focusable_controls.clear()
+	
+	# Получаем кнопки из Panel
+	var executable_button = $Panel/Executable
+	var front_button = $Panel/Front
+	var back_button = $Panel/Back
+	var spine_button = $Panel/Spine
+	var done_button = $Panel/Done
+	
+	# Добавляем элементы в порядке навигации
+	if game_name:
+		focusable_controls.append(game_name)
+		# LineEdit должен оставаться с FOCUS_ALL для работы мыши
+		game_name.focus_mode = Control.FOCUS_ALL
+	
+	if option_button:
+		focusable_controls.append(option_button)
+		option_button.focus_mode = Control.FOCUS_NONE
+	
+	if executable_button:
+		focusable_controls.append(executable_button)
+		executable_button.focus_mode = Control.FOCUS_NONE
+	
+	if front_button:
+		focusable_controls.append(front_button)
+		front_button.focus_mode = Control.FOCUS_NONE
+	
+	if back_button:
+		focusable_controls.append(back_button)
+		back_button.focus_mode = Control.FOCUS_NONE
+	
+	if spine_button:
+		focusable_controls.append(spine_button)
+		spine_button.focus_mode = Control.FOCUS_NONE
+	
+	if download_button:
+		focusable_controls.append(download_button)
+		download_button.focus_mode = Control.FOCUS_NONE
+	
+	if done_button:
+		focusable_controls.append(done_button)
+		done_button.focus_mode = Control.FOCUS_NONE
+	
+	current_focus_index = 0
+
+# Также нужно обновить функцию _set_focus, чтобы она не меняла focus_mode для LineEdit
+func _set_focus(index: int):
+	if index < 0 or index >= focusable_controls.size():
+		return
+	
+	var control = focusable_controls[index]
+	
+	# Для LineEdit не меняем focus_mode, так как он уже FOCUS_ALL
+	if not control is LineEdit:
+		control.focus_mode = Control.FOCUS_ALL
+	
+	control.grab_focus()
+
+# И обновить функцию _clear_all_focus
+func _clear_all_focus():
+	for control in focusable_controls:
+		# Для LineEdit оставляем FOCUS_ALL
+		if not control is LineEdit:
+			control.focus_mode = Control.FOCUS_NONE
+		control.release_focus()
+		
+
+func _setup_control_signals():
+	for control in focusable_controls:
+		if control is Button or control is LineEdit or control is OptionButton:
+			control.focus_entered.connect(func(): _on_control_focus_entered(control))
+			control.focus_exited.connect(func(): _on_control_focus_exited(control))
+			control.mouse_entered.connect(func(): _on_control_mouse_entered(control))
+
+func _on_control_focus_entered(control: Control):
+	for i in focusable_controls.size():
+		if focusable_controls[i] == control:
+			current_focus_index = i
+			break
+	
+	# Визуальная обратная связь
+	if control is Button or control is OptionButton:
+		control.modulate = Color(1.2, 1.2, 1.2)
+	elif control is LineEdit:
+		control.modulate = Color(1.1, 1.1, 1.1)
+
+func _on_control_focus_exited(control: Control):
+	control.modulate = Color(1, 1, 1)
+
+func _on_control_mouse_entered(control: Control):
+	if not gamepad_mode:
+		return
+	
+	for i in focusable_controls.size():
+		if focusable_controls[i] == control:
+			current_focus_index = i
+			_set_focus(i)
+			break
+
+func _move_focus(direction: int):
+	if focusable_controls.is_empty():
+		return
+	
+	_clear_all_focus()
+	current_focus_index += direction
+	
+	if current_focus_index < 0:
+		current_focus_index = focusable_controls.size() - 1
+	elif current_focus_index >= focusable_controls.size():
+		current_focus_index = 0
+	
+	_set_focus(current_focus_index)
+
+func _activate_current_control():
+	if current_focus_index < 0 or current_focus_index >= focusable_controls.size():
+		return
+	
+	var control = focusable_controls[current_focus_index]
+	
+	if control is Button:
+		control.emit_signal("pressed")
+		_trigger_vibration(0.5, 0.0, 0.1)
+	elif control is OptionButton:
+		control.emit_signal("pressed")
+		_trigger_vibration(0.5, 0.0, 0.1)
+
+func _handle_option_button_navigation(direction: int):
+	var control = focusable_controls[current_focus_index]
+	if control is OptionButton:
+		var current_selected = control.selected
+		var new_selected = current_selected + direction
+		
+		if new_selected < 0:
+			new_selected = control.item_count - 1
+		elif new_selected >= control.item_count:
+			new_selected = 0
+		
+		control.selected = new_selected
+		control.emit_signal("item_selected", new_selected)
+
+func _input(event):
+	var main_scene = get_tree().get_first_node_in_group("main_scene")
+	var side_panel = main_scene.get_side_panel()
+
+	# Определяем метод ввода
+	if event is InputEventKey or event is InputEventMouseButton:
+		if current_input_method != "keyboard":
+			current_input_method = "keyboard"
+			gamepad_mode = false
+			_clear_all_focus()
+	elif event is InputEventJoypadButton or event is InputEventJoypadMotion:
+		if current_input_method != "gamepad":
+			current_input_method = "gamepad"
+			gamepad_mode = true
+			if not side_panel.side_panel_shown:
+				_set_focus(current_focus_index)
+		var device_id = event.device
+		last_device_id = device_id
+	
+	# Управление боковой панелью
+	if side_panel.side_panel_shown:
+		if event.is_action_pressed("ui_up") or event.is_action_pressed("up_pad"):
+			side_panel.side_panel_move_focus(-1)
+			_trigger_vibration(1.0, 0.0, 0.1)
+			get_viewport().set_input_as_handled()
+		
+		elif event.is_action_pressed("ui_down") or event.is_action_pressed("down_pad"):
+			side_panel.side_panel_move_focus(1)
+			_trigger_vibration(1.0, 0.0, 0.1)
+			get_viewport().set_input_as_handled()
+		
+		elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
+			side_panel.side_panel_change_scene()
+			get_viewport().set_input_as_handled()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 1.5)
+			MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/key-movement.mp3", -20.0, 1.5)
+	
+	# Управление элементами GameAdd
+	else:
+		if gamepad_mode:
+			if event.is_action_pressed("ui_up") or event.is_action_pressed("up_pad"):
+				_move_focus(-1)
+				_trigger_vibration(1.0, 0.0, 0.1)
+				get_viewport().set_input_as_handled()
+				MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.8)
+			
+			elif event.is_action_pressed("ui_down") or event.is_action_pressed("down_pad"):
+				_move_focus(1)
+				_trigger_vibration(1.0, 0.0, 0.1)
+				get_viewport().set_input_as_handled()
+				MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.5)
+			
+			elif event.is_action_pressed("ui_left") or event.is_action_pressed("left_pad"):
+				if focusable_controls[current_focus_index] is OptionButton:
+					_handle_option_button_navigation(-1)
+					_trigger_vibration(1.0, 0.0, 0.1)
+					get_viewport().set_input_as_handled()
+					MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.5)
+			
+			elif event.is_action_pressed("ui_right") or event.is_action_pressed("right_pad"):
+				if focusable_controls[current_focus_index] is OptionButton:
+					_handle_option_button_navigation(1)
+					_trigger_vibration(1.0, 0.0, 0.1)
+					get_viewport().set_input_as_handled()
+					MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.8)
+			
+			elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
+				_activate_current_control()
+				get_viewport().set_input_as_handled()
+				MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/key-movement.mp3", -20.0, 1.5)
+	
+	# Открытие/закрытие боковой панели
+	if event.is_action_pressed("menu_key") or event.is_action_pressed("menu_pad"):
+		if not side_panel.side_panel_shown:
+			_clear_all_focus()
+			side_panel.show_panel()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 2.0)
+		else:
+			side_panel.hide_panel()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 1.5)
+			if gamepad_mode:
+				_set_focus(current_focus_index)
+		get_viewport().set_input_as_handled()
+	
+	elif event.is_action_pressed("back_pad"):
+		if side_panel.side_panel_shown:
+			side_panel.hide_panel()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 1.5)
+			if gamepad_mode:
+				_set_focus(current_focus_index)
+			get_viewport().set_input_as_handled()
+
+# === Остальные функции остаются без изменений ===
 
 func ensure_covers_directory():
-	"""Создает папку covers если её нет"""
 	if not DirAccess.dir_exists_absolute(covers_path):
 		var result = DirAccess.open("user://").make_dir_recursive(covers_path.get_file())
 		if result == OK:
@@ -53,7 +309,6 @@ func ensure_covers_directory():
 			print("Ошибка создания папки covers: ", result)
 
 func generate_unique_id() -> String:
-	"""Генерирует уникальный идентификатор для игры"""
 	var timestamp = Time.get_unix_time_from_system()
 	var random_part = randi() % 999999
 	return "game_%d_%06d" % [timestamp, random_part]
@@ -63,20 +318,17 @@ func save_game_data() -> bool:
 	if title == "":
 		return false
 	
-	# Генерируем ID если его нет
 	if game_data["id"] == "":
 		game_data["id"] = generate_unique_id()
 	
 	var file_path = "user://games/" + game_data["id"] + ".json"
 	
-	# Создаем директорию если её нет
 	if not DirAccess.dir_exists_absolute("user://games/"):
 		var result = DirAccess.open("user://").make_dir("games")
 		if result != OK:
 			print("Ошибка создания директории games: ", result)
 			return false
 	
-	# Сохраняем файл
 	var file = FileAccess.open(file_path, FileAccess.WRITE)
 	if file:
 		var json_string = JSON.stringify(game_data)
@@ -89,8 +341,6 @@ func save_game_data() -> bool:
 		return false
 
 func reset_form():
-	"""Очищает всю форму после успешного сохранения"""
-	# Очищаем game_data
 	game_data = {
 		"id": "",
 		"title": "",
@@ -101,7 +351,6 @@ func reset_form():
 		"box_type": "xbox"
 	}
 	
-	# Очищаем поле ввода
 	game_name.text = ""
 	
 	var plus_icon = load("res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png")
@@ -112,21 +361,13 @@ func reset_form():
 	spine_icon.texture = plus_icon
 	download_icon.texture = download_icon_path
 	
-	# Сбрасываем выбор типа коробки
 	option_button.select(0)
-	
-	# Разблокируем кнопку загрузки если была заблокирована
 	download_button.disabled = false
 	download_button.text = tr("GA_COVERS_BT")
 	
 	print("Форма очищена")
 
 func load_game_by_id(game_id: String) -> Dictionary:
-	"""
-	Загружает данные игры по её ID
-	
-	Возвращает: Словарь с данными игры или пустой словарь при ошибке
-	"""
 	var file_path = "user://games/" + game_id + ".json"
 	
 	if not FileAccess.file_exists(file_path):
@@ -151,11 +392,6 @@ func load_game_by_id(game_id: String) -> Dictionary:
 	return json.data
 
 func find_game_id_by_title(game_title: String) -> String:
-	"""
-	Находит ID игры по её названию
-	
-	Возвращает: ID игры или пустую строку если не найдена
-	"""
 	var dir = DirAccess.open("user://games/")
 	if not dir:
 		print("Не удалось открыть папку games")
@@ -186,24 +422,12 @@ func find_game_id_by_title(game_title: String) -> String:
 	return ""
 
 func update_game_data_by_id(game_id: String, updated_data: Dictionary) -> bool:
-	"""
-	Обновляет информацию о игре по её ID
-	
-	Параметры:
-	- game_id: Уникальный идентификатор игры
-	- updated_data: Словарь с обновляемыми данными
-	
-	Возвращает: true при успешном обновлении, false при ошибке
-	"""
 	var file_path = "user://games/" + game_id + ".json"
 	
-	# Проверяем существование файла
 	if not FileAccess.file_exists(file_path):
 		print("Игра с ID не найдена: ", game_id)
-		#notification.show_notification(tr("NTF_GAMENOTFOUND"), notification_icon)
 		return false
 	
-	# Загружаем существующие данные
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if not file:
 		print("Ошибка открытия файла: ", file_path)
@@ -221,7 +445,6 @@ func update_game_data_by_id(game_id: String, updated_data: Dictionary) -> bool:
 	
 	var existing_data = json.data
 	
-	# Обновляем только предоставленные поля (кроме ID)
 	for key in updated_data.keys():
 		if key == "id":
 			print("Предупреждение: изменение ID запрещено")
@@ -231,7 +454,6 @@ func update_game_data_by_id(game_id: String, updated_data: Dictionary) -> bool:
 		else:
 			print("Предупреждение: неизвестное поле '", key, "'")
 	
-	# Сохраняем обновленные данные
 	file = FileAccess.open(file_path, FileAccess.WRITE)
 	if not file:
 		print("Ошибка записи файла: ", file_path)
@@ -245,15 +467,6 @@ func update_game_data_by_id(game_id: String, updated_data: Dictionary) -> bool:
 	return true
 
 func update_game_data_by_title(game_title: String, updated_data: Dictionary) -> bool:
-	"""
-	Обновляет информацию о игре по её названию
-	
-	Параметры:
-	- game_title: Название игры для поиска
-	- updated_data: Словарь с обновляемыми данными
-	
-	Возвращает: true при успешном обновлении, false при ошибке
-	"""
 	var game_id = find_game_id_by_title(game_title)
 	if game_id == "":
 		print("Игра не найдена по названию: ", game_title)
@@ -264,12 +477,10 @@ func update_game_data_by_title(game_title: String, updated_data: Dictionary) -> 
 func delete_game_by_id(game_id: String) -> bool:
 	var file_path = "user://games/" + game_id + ".json"
 
-	# Проверяем существование файла
 	if not FileAccess.file_exists(file_path):
 		print("Игра с таким ID не найдена: ", game_id)
 		return false
 
-	# Пытаемся удалить файл
 	var err := DirAccess.remove_absolute(file_path)
 	if err != OK:
 		print("Ошибка удаления файла: ", err)
@@ -279,78 +490,58 @@ func delete_game_by_id(game_id: String) -> bool:
 	return true
 
 func get_steamboxcover_path() -> String:
-	"""Возвращает путь к программе steamboxcover с улучшенной отладкой"""
 	var exe_path = OS.get_executable_path()
 	var exe_dir = exe_path.get_base_dir()
 	
 	var steamboxcover_path: String
 	if OS.get_name() == "Windows":
-		steamboxcover_path = exe_dir + "/steamboxcover.exe"
+		steamboxcover_path = exe_dir + "/bin/steamboxcover.exe"
 	else:
-		steamboxcover_path = exe_dir + "/steamboxcover"
+		steamboxcover_path = exe_dir + "/bin/steamboxcover"
 	
-	# Проверяем также в текущей рабочей директории
 	var current_dir = OS.get_environment("PWD")
 	if current_dir == "":
 		current_dir = exe_dir
 	
 	var alt_path: String
 	if OS.get_name() == "Windows":
-		alt_path = current_dir + "/steamboxcover.exe"
+		alt_path = current_dir + "/bin/steamboxcover.exe"
 	else:
-		alt_path = current_dir + "/steamboxcover"
+		alt_path = current_dir + "/bin/steamboxcover"
 	
-	# Если основной путь не существует, пробуем альтернативный
 	if not FileAccess.file_exists(steamboxcover_path) and FileAccess.file_exists(alt_path):
 		return alt_path
 	
 	return steamboxcover_path
 
 func get_spine_template_path() -> String:
-	"""Возвращает путь к шаблону spine"""
 	var exe_path = OS.get_executable_path()
 	var exe_dir = exe_path.get_base_dir()
-	return exe_dir + "/steam_spine.png"
+	return exe_dir + "/bin/" + game_data["platform"] + "_spine.png"
 
 func normalize_filename_for_comparison(filename: String) -> Dictionary:
-	"""
-	Нормализует имя файла для сравнения и возвращает словарь с нормализованным именем и типом обложки.
-	Возвращает: {"name": нормализованное_имя, "type": "front|back|spine|unknown"}
-	"""
 	var normalized = filename
 	
-	# Убираем расширение
 	if normalized.ends_with(".png") or normalized.ends_with(".jpg") or normalized.ends_with(".jpeg") or normalized.ends_with(".bmp") or normalized.ends_with(".webp"):
 		normalized = normalized.get_basename()
 	
-	# Определяем и убираем суффикс типа обложки
-	var cover_type = "front"  # по умолчанию - передняя обложка
+	var cover_type = "front"
 	if normalized.to_lower().ends_with("_back"):
 		cover_type = "back"
-		normalized = normalized.substr(0, normalized.length() - 5)  # убираем "_back"
+		normalized = normalized.substr(0, normalized.length() - 5)
 	elif normalized.to_lower().ends_with("_spine"):
 		cover_type = "spine"
-		normalized = normalized.substr(0, normalized.length() - 6)  # убираем "_spine"
+		normalized = normalized.substr(0, normalized.length() - 6)
 	
-	# Сохраняем оригинальное имя до очистки для разных вариантов
 	var original_normalized = normalized
-	
-	# Убираем лишние символы, которые могут мешать сравнению
 	normalized = normalized.replace(";", " ").replace(":", " ").replace("!", " ").replace("?", " ").replace(",", " ").replace("-", " ").replace("_", " ")
 	normalized = normalized.strip_edges()
-	
-	# Приводим к нижнему регистру для сравнения
 	normalized = normalized.to_lower()
-	
-	# Также создаём вариант без пробелов (для сравнения с именами, где пробелы были удалены)
 	var normalized_no_spaces = normalized.replace(" ", "")
 	
 	return {"name": normalized, "name_no_spaces": normalized_no_spaces, "original": original_normalized.to_lower(), "type": cover_type}
 
 func find_covers_for_game(game_title: String) -> Dictionary:
-	"""
-	Ищет обложки для указанной игры в папке covers, используя нормализованное сравнение имён файлов
-	"""
 	var found = {}
 	
 	var dir = DirAccess.open(covers_path)
@@ -360,7 +551,6 @@ func find_covers_for_game(game_title: String) -> Dictionary:
 	
 	print("Ищем обложки для игры: ", game_title, " в папке: ", covers_path)
 	
-	# Используем санитизацию как в steamboxcover
 	var sanitized_game_title = sanitize_filename_for_steamboxcover(game_title)
 	print("Санитизированный заголовок игры для поиска: ", sanitized_game_title)
 	
@@ -372,31 +562,26 @@ func find_covers_for_game(game_title: String) -> Dictionary:
 			var original_basename = file_name.get_basename()
 			var lower_filename = original_basename.to_lower()
 			
-			# Определяем тип обложки
 			var cover_type = "front"
 			if lower_filename.ends_with("_back"):
 				cover_type = "back"
 			elif lower_filename.ends_with("_spine"):
 				cover_type = "spine"
 			elif lower_filename.ends_with("_logo"):
-				# Пропускаем логотипы
 				file_name = dir.get_next()
 				continue
-			# Если это не один из известных суффиксов, это front
 			
-			# Санитизируем имя файла (без суффикса)
 			var filename_without_suffix = original_basename
 			if cover_type == "back":
-				filename_without_suffix = original_basename.substr(0, original_basename.length() - 5)  # "_back"
+				filename_without_suffix = original_basename.substr(0, original_basename.length() - 5)
 			elif cover_type == "spine":
-				filename_without_suffix = original_basename.substr(0, original_basename.length() - 6)  # "_spine"
+				filename_without_suffix = original_basename.substr(0, original_basename.length() - 6)
 			
 			var sanitized_filename = sanitize_filename_for_steamboxcover(filename_without_suffix)
 			
 			print("Сравниваем: '", sanitized_filename, "' (тип: ", cover_type, ") с '", sanitized_game_title, "'")
 			
 			if sanitized_filename == sanitized_game_title:
-				# Совпадение найдено
 				found[cover_type] = covers_path + file_name
 				print("Найдена ", cover_type, " обложка: ", file_name)
 		
@@ -409,20 +594,14 @@ func find_covers_for_game(game_title: String) -> Dictionary:
 		print("  ", key, ": ", found[key])
 	
 	return found
-	
 
 func apply_found_covers(covers: Dictionary):
-	"""
-	Применяет найденные обложки к game_data
-	"""
 	var icon_path: String = "res://assets/icons/check.png"
 	
-	# Обновляем game_data
 	for cover_type in covers:
 		var path = covers[cover_type]
 		game_data[cover_type] = path
 		
-		# Обновляем соответствующую иконку
 		match cover_type:
 			"front": 
 				front_icon.texture = load(icon_path)
@@ -434,7 +613,6 @@ func apply_found_covers(covers: Dictionary):
 				spine_icon.texture = load(icon_path)
 				print("Применена боковая обложка: ", path)
 
-	# Если не все обложки найдены, оставляем плюсы для недостающих
 	if not covers.has("front"):
 		var plus_icon = load("res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png")
 		front_icon.texture = plus_icon
@@ -449,37 +627,26 @@ func apply_found_covers(covers: Dictionary):
 		var plus_icon = load("res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png")
 		spine_icon.texture = plus_icon
 		print("Не найдена боковая обложка, оставлена иконка плюса")
-		
+
 func sanitize_filename_for_steamboxcover(filename: String) -> String:
-	"""
-	Санитизирует имя файла так же, как это делает steamboxcover.
-	"""
 	var safe := filename
-	
-	# Удаляем или заменяем символы, которые могут быть проблемными для имён файлов
 	var invalid_chars := ["<", ">", ":", "\"", "/", "\\", "|", "?", "*", ";", "!", ".", "'", "`", "~"]
 	
 	for c in invalid_chars:
 		safe = safe.replace(c, " ")
 	
-	# Заменяем множественные пробелы на один
 	while safe.contains("  "):
 		safe = safe.replace("  ", " ")
 	
-	# Убираем начальные и конечные пробелы
 	safe = safe.strip_edges()
 	
-	# Убираем точки в конце
 	while safe.ends_with("."):
 		safe = safe.substr(0, safe.length() - 1)
 	
-	# Ограничение длины
 	if safe.length() > 200:
 		safe = safe.substr(0, 200)
 	
-	# Убираем все пробелы, чтобы получить имя как в steamboxcover
 	var no_spaces = safe.replace(" ", "")
-	
 	return no_spaces
 
 func _on_fs_pressed() -> void:
@@ -518,6 +685,7 @@ func _on_download_pressed() -> void:
 	args.append(ProjectSettings.globalize_path(covers_path))
 	args.append("-k")
 	args.append("ac6407f383cb7696689026c4576a7758")
+	args.append("--only_steamgriddb")
 	
 	if spine_template_path != "":
 		args.append("--spine_template")
@@ -554,11 +722,7 @@ func _on_done_pressed() -> void:
 	
 	if save_game_data():
 		notification.show_notification(tr("NTF_GAMESAVESUCCESS"), notification_icon)
-		
-		# Ждём немного чтобы пользователь увидел уведомление
 		await get_tree().create_timer(1.0).timeout
-		
-		# Очищаем форму
 		reset_form()
 	else:
 		notification.show_notification(tr("NTF_GAMESAVEFAILED"), notification_icon)
@@ -605,40 +769,45 @@ func _on_file_selected(path):
 func _on_option_button_item_selected(index):
 	match index:
 		0:
-			game_data["box_type"] = "xbox"
-		1:
 			game_data["box_type"] = "pc"
+			game_data["platform"] = "steam"
+		1:
+			game_data["box_type"] = "xbox"
+			game_data["platform"] = "xorig"
+		2:
+			game_data["box_type"] = "xbox"
+			game_data["platform"] = "x360"
+		3:
+			game_data["box_type"] = "xbox"
+			game_data["platform"] = "xone"
+		4:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "psx"
+		5:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "ps2"
+		6:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "ps3"
+		7:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "ps4"
+		8:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "ps5"
+		9:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "n64"
+		10:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "gc"
+		11:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "wii"
+		12:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "switch"
 
-func _input(event):
-	var main_scene = get_tree().get_first_node_in_group("main_scene")
-	var side_panel = main_scene.get_side_panel()
-
-	if event is InputEventKey or event is InputEventMouseButton:
-		if current_input_method != "keyboard":
-			current_input_method = "keyboard"
-	elif event is InputEventJoypadButton or event is InputEventJoypadMotion:
-		if current_input_method != "gamepad":
-			current_input_method = "gamepad"
-		var device_id = event.device
-		last_device_id = device_id
-	
-	if event.is_action_pressed("ui_up") or event.is_action_pressed("up_pad"):
-		if side_panel.side_panel_shown:
-			side_panel.side_panel_move_focus(-1)
-			_trigger_vibration(1.0, 0.0, 0.1)
-	elif event.is_action_pressed("ui_down") or event.is_action_pressed("down_pad"):
-		if side_panel.side_panel_shown:
-			side_panel.side_panel_move_focus(1)
-			_trigger_vibration(1.0, 0.0, 0.1)
-	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
-		if side_panel.side_panel_shown:
-			side_panel.side_panel_change_scene()
-	elif event.is_action_pressed("menu_key") or event.is_action_pressed("menu_pad"):
-		if not side_panel.side_panel_shown:
-			side_panel.show_panel()
-		else:
-			side_panel.hide_panel()
-			
 func _trigger_vibration(weak_strength: float, strong_strength: float, duration_sec: float) -> void:
 	if last_device_id < 0 or current_input_method == "keyboard":
 		return

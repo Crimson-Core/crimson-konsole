@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://cmugoubnjxiu3"]
+[gd_scene load_steps=29 format=3 uid="uid://cmugoubnjxiu3"]
 
 [ext_resource type="Script" uid="uid://frybfl02g8cs" path="res://scripts/CoverFlow.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://ba4yqe08xdwar" path="res://assets/ui/particles.png" id="3_a80lr"]
@@ -8,10 +8,12 @@
 [ext_resource type="Texture2D" uid="uid://dlxhgg7unex3f" path="res://assets/kenney_input-prompts_1.4/Xbox Series/Double/xbox_button_color_a.png" id="6_yspgm"]
 [ext_resource type="Texture2D" uid="uid://dlxlijwfw4tal" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard_arrows_vertical.png" id="7_35aor"]
 [ext_resource type="Texture2D" uid="uid://c6p1xu0ee11m" path="res://assets/kenney_input-prompts_1.4/Xbox Series/Double/xbox_dpad_horizontal.png" id="7_03102"]
+[ext_resource type="FontFile" uid="uid://fy0g5bstke7u" path="res://assets/fonts/Montserrat-Bold.ttf" id="8_5k11u"]
 [ext_resource type="Texture2D" uid="uid://tbog4hp8t585" path="res://assets/kenney_input-prompts_1.4/Keyboard & Mouse/Double/keyboard_escape.png" id="8_8dok0"]
 [ext_resource type="FontFile" uid="uid://dj3q2lpnkcabm" path="res://assets/fonts/Montserrat-Medium.ttf" id="8_35aor"]
 [ext_resource type="FontFile" uid="uid://bl33m6ku6ffwm" path="res://assets/fonts/Jost/Jost-VariableFont_wght.ttf" id="8_cp183"]
 [ext_resource type="Texture2D" uid="uid://sqgrucqfcdiq" path="res://assets/kenney_input-prompts_1.4/Xbox Series/Double/controller_xboxseries.png" id="8_yspgm"]
+[ext_resource type="FontFile" uid="uid://cb2l8tmq0ej22" path="res://assets/fonts/KosugiMaru-Regular.ttf" id="9_5xn84"]
 [ext_resource type="FontFile" uid="uid://b3or8os1cyhpm" path="res://assets/fonts/DoHyeon-Regular.ttf" id="9_66wke"]
 [ext_resource type="Texture2D" uid="uid://osuap3r4kec" path="res://assets/kenney_input-prompts_1.4/Xbox Series/Double/xbox_button_menu_black.png" id="11_8dok0"]
 [ext_resource type="Texture2D" uid="uid://7senqp83e0md" path="res://assets/ui/skibidi.png" id="14_ntab5"]
@@ -29,8 +31,16 @@ ambient_light_source = 2
 ambient_light_color = Color(0.513726, 0.513726, 0.513726, 1)
 ambient_light_energy = 3.0
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_a80lr"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_qap1s"]
 texture = ExtResource("6_q6pe7")
+
+[sub_resource type="FontVariation" id="FontVariation_fd4am"]
+fallbacks = Array[Font]([ExtResource("9_5xn84")])
+base_font = ExtResource("8_5k11u")
+
+[sub_resource type="LabelSettings" id="LabelSettings_1qqoe"]
+font = SubResource("FontVariation_fd4am")
+font_size = 44
 
 [sub_resource type="LabelSettings" id="LabelSettings_35aor"]
 font = ExtResource("8_cp183")
@@ -124,24 +134,26 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = 1554.0
+offset_left = 1515.0
 offset_top = -20.0
 offset_right = 1881.0
-offset_bottom = 120.0
+offset_bottom = 132.0
 grow_horizontal = 0
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxTexture_a80lr")
+theme_override_styles/panel = SubResource("StyleBoxTexture_qap1s")
 script = ExtResource("17_35aor")
 
 [node name="Label" type="Label" parent="TopPanel/Time"]
 layout_mode = 0
-offset_left = 96.0
-offset_top = 9.0
-offset_right = 280.0
-offset_bottom = 96.0
+offset_left = 81.0
+offset_top = -2.0
+offset_right = 331.0
+offset_bottom = 113.0
 theme_override_fonts/font = ExtResource("9_66wke")
 theme_override_font_sizes/font_size = 86
-text = "12:00"
+text = "12:00 AM
+MON 13/12"
+label_settings = SubResource("LabelSettings_1qqoe")
 horizontal_alignment = 1
 vertical_alignment = 1
 justification_flags = 139

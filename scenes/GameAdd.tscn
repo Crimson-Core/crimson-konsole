@@ -1,14 +1,30 @@
-[gd_scene load_steps=16 format=3 uid="uid://m8nha0xnac7y"]
+[gd_scene load_steps=24 format=3 uid="uid://m8nha0xnac7y"]
 
 [ext_resource type="Script" uid="uid://bq5fqq12ljivu" path="res://scripts/GameAdd.gd" id="1_jlcgv"]
 [ext_resource type="Texture2D" uid="uid://7senqp83e0md" path="res://assets/ui/skibidi.png" id="3_hnih8"]
 [ext_resource type="Texture2D" uid="uid://jn3gipctg76m" path="res://assets/ui/crimson console.png" id="4_accbs"]
 [ext_resource type="Texture2D" uid="uid://bpx3hq3fbkh8d" path="res://logo.png" id="5_8ocm4"]
+[ext_resource type="Texture2D" uid="uid://djtt6ttycbuw4" path="res://assets/ui/corner.png" id="5_i4sv0"]
+[ext_resource type="Script" uid="uid://dwnrlwsqvoglg" path="res://scripts/nodes/TimeLabel.gd" id="6_2ij0d"]
 [ext_resource type="Texture2D" uid="uid://btf24cowua1uj" path="res://assets/ui/game_add/panel.png" id="6_accbs"]
 [ext_resource type="FontFile" uid="uid://bl33m6ku6ffwm" path="res://assets/fonts/Jost/Jost-VariableFont_wght.ttf" id="7_8e8ny"]
+[ext_resource type="FontFile" uid="uid://b3or8os1cyhpm" path="res://assets/fonts/DoHyeon-Regular.ttf" id="7_fhx61"]
+[ext_resource type="FontFile" uid="uid://fy0g5bstke7u" path="res://assets/fonts/Montserrat-Bold.ttf" id="8_fhx61"]
 [ext_resource type="Texture2D" uid="uid://vckwtjp05t7f" path="res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png" id="8_qgo40"]
+[ext_resource type="FontFile" uid="uid://cb2l8tmq0ej22" path="res://assets/fonts/KosugiMaru-Regular.ttf" id="9_ama77"]
 [ext_resource type="FontFile" uid="uid://dj3q2lpnkcabm" path="res://assets/fonts/Montserrat-Medium.ttf" id="9_qgo40"]
 [ext_resource type="Texture2D" uid="uid://b7mu6i3jc6nyf" path="res://assets/icons/download.png" id="10_52518"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_qumfr"]
+texture = ExtResource("5_i4sv0")
+
+[sub_resource type="FontVariation" id="FontVariation_kyj2f"]
+fallbacks = Array[Font]([ExtResource("9_ama77")])
+base_font = ExtResource("8_fhx61")
+
+[sub_resource type="LabelSettings" id="LabelSettings_hg730"]
+font = SubResource("FontVariation_kyj2f")
+font_size = 44
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8ocm4"]
 texture = ExtResource("6_accbs")
@@ -70,6 +86,45 @@ offset_bottom = 87.0
 texture = ExtResource("5_8ocm4")
 expand_mode = 1
 stretch_mode = 4
+
+[node name="TopPanel" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Time" type="Panel" parent="TopPanel"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 1515.0
+offset_top = -20.0
+offset_right = 1881.0
+offset_bottom = 132.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_qumfr")
+script = ExtResource("6_2ij0d")
+
+[node name="Label" type="Label" parent="TopPanel/Time"]
+layout_mode = 0
+offset_left = 81.0
+offset_top = -2.0
+offset_right = 331.0
+offset_bottom = 113.0
+theme_override_fonts/font = ExtResource("7_fhx61")
+theme_override_font_sizes/font_size = 86
+text = "12:00 AM
+MON 13/12"
+label_settings = SubResource("LabelSettings_hg730")
+horizontal_alignment = 1
+vertical_alignment = 1
+justification_flags = 139
+
+[node name="Timer" type="Timer" parent="TopPanel/Time"]
+autostart = true
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 0

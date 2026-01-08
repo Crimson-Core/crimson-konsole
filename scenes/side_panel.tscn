@@ -1,9 +1,10 @@
-[gd_scene load_steps=11 format=3 uid="uid://ddp74nsq1w4v7"]
+[gd_scene load_steps=12 format=3 uid="uid://ddp74nsq1w4v7"]
 
 [ext_resource type="FontFile" uid="uid://bl33m6ku6ffwm" path="res://assets/fonts/Jost/Jost-VariableFont_wght.ttf" id="1_o4m3c"]
 [ext_resource type="Texture2D" uid="uid://cpfiay5pqs3l3" path="res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_home.png" id="2_waqlc"]
 [ext_resource type="Texture2D" uid="uid://vckwtjp05t7f" path="res://assets/kenney_input-prompts_1.4/Nintendo Switch 2/Default/switch_button_plus.png" id="3_waqlc"]
 [ext_resource type="Texture2D" uid="uid://dwuqa2jdp4o7f" path="res://assets/icons/settings.png" id="4_ad6hi"]
+[ext_resource type="Texture2D" uid="uid://cjw1mmxf8r1l0" path="res://assets/icons/delete.png" id="5_tv1fm"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o4m3c"]
 bg_color = Color(0.854902, 0.286275, 0.286275, 0.670588)
@@ -107,14 +108,15 @@ offset_right = 328.0
 offset_bottom = 686.0
 color = Color(0.156863, 0.156863, 0.156863, 1)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
-z_index = 100
-layout_mode = 0
-offset_top = 110.0
-offset_right = 328.0
-offset_bottom = 347.0
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
 
-[node name="Home" type="Button" parent="VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer"]
+z_index = 100
+offset_top = 258.0
+offset_right = 358.0
+offset_bottom = 578.90906
+
+[node name="Home" type="Button" parent="CanvasLayer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_fonts/font = ExtResource("1_o4m3c")
@@ -123,7 +125,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
 theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
 text = "SP_HOME_BT"
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Home"]
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/VBoxContainer/Home"]
 layout_mode = 0
 offset_left = 19.0
 offset_top = 5.0
@@ -133,14 +135,14 @@ scale = Vector2(0.969954, 0.969954)
 texture = ExtResource("2_waqlc")
 expand_mode = 1
 
-[node name="Hover" type="ColorRect" parent="VBoxContainer/Home"]
+[node name="Hover" type="ColorRect" parent="CanvasLayer/VBoxContainer/Home"]
 visible = false
 layout_mode = 0
 offset_right = 4.0
 offset_bottom = 75.0
 color = Color(0.854902, 0.286275, 0.286275, 1)
 
-[node name="GameAdd" type="Button" parent="VBoxContainer"]
+[node name="GameAdd" type="Button" parent="CanvasLayer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_fonts/font = ExtResource("1_o4m3c")
@@ -149,7 +151,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
 theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
 text = "SP_ADDGAME_BT"
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/GameAdd"]
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/VBoxContainer/GameAdd"]
 layout_mode = 0
 offset_left = 19.0
 offset_top = 5.0
@@ -159,14 +161,14 @@ scale = Vector2(0.969954, 0.969954)
 texture = ExtResource("3_waqlc")
 expand_mode = 1
 
-[node name="Hover" type="ColorRect" parent="VBoxContainer/GameAdd"]
+[node name="Hover" type="ColorRect" parent="CanvasLayer/VBoxContainer/GameAdd"]
 visible = false
 layout_mode = 0
 offset_right = 4.0
 offset_bottom = 75.0
 color = Color(0.854902, 0.286275, 0.286275, 1)
 
-[node name="Settings" type="Button" parent="VBoxContainer"]
+[node name="Settings" type="Button" parent="CanvasLayer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_fonts/font = ExtResource("1_o4m3c")
@@ -175,7 +177,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
 theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
 text = "SP_SETTINGS_BT"
 
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/Settings"]
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/VBoxContainer/Settings"]
 layout_mode = 0
 offset_left = 19.0
 offset_top = 7.72726
@@ -185,7 +187,33 @@ scale = Vector2(0.969954, 0.969954)
 texture = ExtResource("4_ad6hi")
 expand_mode = 1
 
-[node name="Hover" type="ColorRect" parent="VBoxContainer/Settings"]
+[node name="Hover" type="ColorRect" parent="CanvasLayer/VBoxContainer/Settings"]
+visible = false
+layout_mode = 0
+offset_right = 4.0
+offset_bottom = 75.0
+color = Color(0.854902, 0.286275, 0.286275, 1)
+
+[node name="Exit" type="Button" parent="CanvasLayer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("1_o4m3c")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/hover = SubResource("StyleBoxFlat_o4m3c")
+theme_override_styles/focus = SubResource("StyleBoxFlat_ad6hi")
+text = "SP_EXIT_BT"
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/VBoxContainer/Exit"]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 7.72726
+offset_right = 83.0
+offset_bottom = 71.7273
+scale = Vector2(0.969954, 0.969954)
+texture = ExtResource("5_tv1fm")
+expand_mode = 1
+
+[node name="Hover" type="ColorRect" parent="CanvasLayer/VBoxContainer/Exit"]
 visible = false
 layout_mode = 0
 offset_right = 4.0
