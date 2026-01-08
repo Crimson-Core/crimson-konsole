@@ -19,7 +19,8 @@ extends Control
 	"back": "",
 	"spine": "",
 	"executable": "",
-	"box_type": "xbox"
+	"box_type": "pc",
+	"platform": "steam"
 }
 
 var covers_path = "user://covers/"
@@ -43,8 +44,19 @@ func _ready():
 	add_child(notification)
 	ensure_covers_directory()
 	
-	option_button.add_item("Xbox 360", 0)
-	option_button.add_item("PC/Steam", 1)
+	option_button.add_item("PC/Steam", 0)
+	option_button.add_item("Xbox Original", 1)
+	option_button.add_item("Xbox 360", 2)
+	option_button.add_item("Xbox One", 3)
+	option_button.add_item("Playstation 1", 4)
+	option_button.add_item("Playstation 2", 5)
+	option_button.add_item("Playstation 3", 6)
+	option_button.add_item("Playstation 4", 7)
+	option_button.add_item("Playstation 5", 8)
+	option_button.add_item("Nintendo 64", 9)
+	option_button.add_item("Nintendo GCube", 10)
+	option_button.add_item("Nintendo Wii", 11)
+	option_button.add_item("Nintendo Switch", 12)
 	option_button.item_selected.connect(_on_option_button_item_selected)
 	
 	MusicPlayer.enable_reverb_effect(true, 0.2, 0.4)
@@ -228,6 +240,8 @@ func _input(event):
 		elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
 			side_panel.side_panel_change_scene()
 			get_viewport().set_input_as_handled()
+			MusicPlayer.play_sfx("res://assets/sfx/Fantasy UI SFX/Skyward Hero/SkywardHero_UI (5).wav", -25.0, 1.5)
+			MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/key-movement.mp3", -20.0, 1.5)
 	
 	# Управление элементами GameAdd
 	else:
@@ -236,27 +250,32 @@ func _input(event):
 				_move_focus(-1)
 				_trigger_vibration(1.0, 0.0, 0.1)
 				get_viewport().set_input_as_handled()
+				MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.8)
 			
 			elif event.is_action_pressed("ui_down") or event.is_action_pressed("down_pad"):
 				_move_focus(1)
 				_trigger_vibration(1.0, 0.0, 0.1)
 				get_viewport().set_input_as_handled()
+				MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.5)
 			
 			elif event.is_action_pressed("ui_left") or event.is_action_pressed("left_pad"):
 				if focusable_controls[current_focus_index] is OptionButton:
 					_handle_option_button_navigation(-1)
 					_trigger_vibration(1.0, 0.0, 0.1)
 					get_viewport().set_input_as_handled()
+					MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.5)
 			
 			elif event.is_action_pressed("ui_right") or event.is_action_pressed("right_pad"):
 				if focusable_controls[current_focus_index] is OptionButton:
 					_handle_option_button_navigation(1)
 					_trigger_vibration(1.0, 0.0, 0.1)
 					get_viewport().set_input_as_handled()
+					MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.8)
 			
 			elif event.is_action_pressed("ui_accept") or event.is_action_pressed("accept_pad"):
 				_activate_current_control()
 				get_viewport().set_input_as_handled()
+				MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/key-movement.mp3", -20.0, 1.5)
 	
 	# Открытие/закрытие боковой панели
 	if event.is_action_pressed("menu_key") or event.is_action_pressed("menu_pad"):
@@ -476,9 +495,9 @@ func get_steamboxcover_path() -> String:
 	
 	var steamboxcover_path: String
 	if OS.get_name() == "Windows":
-		steamboxcover_path = exe_dir + "/steamboxcover.exe"
+		steamboxcover_path = exe_dir + "/bin/steamboxcover.exe"
 	else:
-		steamboxcover_path = exe_dir + "/steamboxcover"
+		steamboxcover_path = exe_dir + "/bin/steamboxcover"
 	
 	var current_dir = OS.get_environment("PWD")
 	if current_dir == "":
@@ -486,9 +505,9 @@ func get_steamboxcover_path() -> String:
 	
 	var alt_path: String
 	if OS.get_name() == "Windows":
-		alt_path = current_dir + "/steamboxcover.exe"
+		alt_path = current_dir + "/bin/steamboxcover.exe"
 	else:
-		alt_path = current_dir + "/steamboxcover"
+		alt_path = current_dir + "/bin/steamboxcover"
 	
 	if not FileAccess.file_exists(steamboxcover_path) and FileAccess.file_exists(alt_path):
 		return alt_path
@@ -498,7 +517,7 @@ func get_steamboxcover_path() -> String:
 func get_spine_template_path() -> String:
 	var exe_path = OS.get_executable_path()
 	var exe_dir = exe_path.get_base_dir()
-	return exe_dir + "/steam_spine.png"
+	return exe_dir + "/bin/" + game_data["platform"] + "_spine.png"
 
 func normalize_filename_for_comparison(filename: String) -> Dictionary:
 	var normalized = filename
@@ -666,6 +685,7 @@ func _on_download_pressed() -> void:
 	args.append(ProjectSettings.globalize_path(covers_path))
 	args.append("-k")
 	args.append("ac6407f383cb7696689026c4576a7758")
+	args.append("--only_steamgriddb")
 	
 	if spine_template_path != "":
 		args.append("--spine_template")
@@ -749,9 +769,44 @@ func _on_file_selected(path):
 func _on_option_button_item_selected(index):
 	match index:
 		0:
-			game_data["box_type"] = "xbox"
-		1:
 			game_data["box_type"] = "pc"
+			game_data["platform"] = "steam"
+		1:
+			game_data["box_type"] = "xbox"
+			game_data["platform"] = "xorig"
+		2:
+			game_data["box_type"] = "xbox"
+			game_data["platform"] = "x360"
+		3:
+			game_data["box_type"] = "xbox"
+			game_data["platform"] = "xone"
+		4:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "psx"
+		5:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "ps2"
+		6:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "ps3"
+		7:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "ps4"
+		8:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "ps5"
+		9:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "n64"
+		10:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "gc"
+		11:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "wii"
+		12:
+			game_data["box_type"] = "pc"
+			game_data["platform"] = "switch"
 
 func _trigger_vibration(weak_strength: float, strong_strength: float, duration_sec: float) -> void:
 	if last_device_id < 0 or current_input_method == "keyboard":

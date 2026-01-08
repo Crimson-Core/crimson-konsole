@@ -89,12 +89,7 @@ func load_music():
 		"res://assets/music/Deathbrain - how to sleep.mp3",
 		"res://assets/music/Deathbrain - i don't mind staying up late.mp3",
 		"res://assets/music/Deathbrain - my room is upside down.mp3",
-		"res://assets/music/GnB Chili - Emotionally Unavailable VIP.mp3",
 		"res://assets/music/Star Trash - Smokescreen.mp3",
-		"res://assets/music/MIMIDEATH - girls just want 2 have fun.mp3",
-		"res://assets/music/xaptiox - if i told you --u_u.mp3",
-		"res://assets/music/xaptiox - noodles.mp3",
-		"res://assets/music/xaptiox - soup.mp3",
 		"res://assets/music/Xxtarlit⚸ - Fleeting Frozen Heart.mp3",
 		"res://assets/music/Xxtarlit⚸ - untitled.mp3"
 	]

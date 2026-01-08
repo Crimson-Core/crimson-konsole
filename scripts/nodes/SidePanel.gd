@@ -41,19 +41,21 @@ func _input(event):
 	if event.is_action_pressed("ui_up"):
 		side_panel_move_focus(-1)
 		get_viewport().set_input_as_handled()
+		MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.8)
 	elif event.is_action_pressed("ui_down"):
 		side_panel_move_focus(1)
 		get_viewport().set_input_as_handled()
+		MusicPlayer.play_sfx("res://addons/fancy_editor_sounds/keyboard_sounds/button-sidebar-hover.wav", -8.0, 1.5)
 	
 	# Подтверждение выбора
-	elif event.is_action_pressed("ui_accept"):
-		side_panel_change_scene()
-		get_viewport().set_input_as_handled()
+	#elif event.is_action_pressed("ui_accept"):
+		#side_panel_change_scene()
+		#get_viewport().set_input_as_handled()
 	
 	# Закрытие панели
-	elif event.is_action_pressed("ui_cancel"):
-		hide_panel()
-		get_viewport().set_input_as_handled()
+	#elif event.is_action_pressed("ui_cancel"):
+		#hide_panel()
+		#get_viewport().set_input_as_handled()
 
 func show_panel():
 	if side_panel_moving or side_panel_shown or side_panel_buttons.is_empty():
