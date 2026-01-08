@@ -37,10 +37,6 @@
 - **🎵 Music Player** - Built-in music player with reverb effects
 - **✏️ Game Management** - Easy adding, editing, and organizing of games
 
-## 🎬 Preview
-
-> The launcher features a dynamic 3D interface where game boxes rotate and scale based on selection, creating an immersive browsing experience.
-
 ### Supported Box Types
 
 - 🟦 PC/Steam
@@ -169,7 +165,8 @@ This project is licensed under the terms specified in the [LICENSE](LICENSE) fil
 - [Godot Engine](https://godotengine.org/) - Amazing open-source game engine
 - [SteamGridDB](https://www.steamgriddb.com/) - Cover art database
 - [Kenney](https://kenney.nl/) - Input prompt assets
-- All contributors and testers
+- All testers
+- [@EpitaphNewell](https://github.com/EpitaphNewell) for initial design and concept
 
 ## 📞 Support
 
@@ -196,10 +193,6 @@ This project is licensed under the terms specified in the [LICENSE](LICENSE) fil
 - **🌍 Мультиязычность** - Локализация на английский, русский и японский языки
 - **🎵 Музыкальный плеер** - Встроенный музыкальный плеер с эффектами реверберации
 - **✏️ Управление играми** - Простое добавление, редактирование и организация игр
-
-## 🎬 Предварительный просмотр
-
-> Лаунчер имеет динамичный 3D интерфейс, где коробки игр вращаются и масштабируются при выборе, создавая захватывающий опыт просмотра.
 
 ### Поддерживаемые типы коробок
 
@@ -328,8 +321,9 @@ crimson-konsole/
 
 - [Godot Engine](https://godotengine.org/) - Потрясающий движок с открытым исходным кодом
 - [SteamGridDB](https://www.steamgriddb.com/) - База данных обложек
-- [Kenney](https://kenney.nl/) - Ресурсы подсказок ввода
-- Всем участникам и тестировщикам
+- [Kenney](https://kenney.nl/) - Спрайты подсказок ввода
+- Всем тестировщикам
+- [@EpitaphNewell](https://github.com/EpitaphNewell) за изначальный дизайн и концепт
 
 ## 📞 Поддержка
 
